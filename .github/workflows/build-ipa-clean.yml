@@ -1,0 +1,50 @@
+# Build unsigned IPA with GitHub Actions (no Mac, no Apple ID, no certificate needed)
+# Usage:
+#  1. Create a public repo on github.com, upload the whole XiaoYuanDad folder to the repo root
+#  2. Create file .github/workflows/build-ipa.yml in the repo, paste this content, Commit
+#  3. Open the repo Actions tab -> "Build unsigned IPA" -> Run workflow -> wait 5-10 min
+#  4. Download XiaoYuanDad-unsigned-ipa from Artifacts at the bottom of that run page
+#  5. Sign the unsigned .ipa with your own signing tool, then install it on your iPhone
+#     (an unsigned .ipa cannot be installed directly)
+name: Build unsigned IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show Xcode version on runner
+        run: xcodebuild -version && swift --version
+
+      - name: Install xtool
+        run: brew install xtool-org/tap/xtool
+
+      - name: Build unsigned IPA (no signing)
+        run: |
+          cd XiaoYuanDad
+          xtool dev build --ipa </dev/null
+          echo "--- find ipa ---"
+          find . -name "*.ipa" -o -name "*.app" | head -20
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: XiaoYuanDad-unsigned-ipa
+          path: XiaoYuanDad/**/*.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+# Fallback (only if xtool fails on the runner because it asks for Apple ID login first):
+#  Convert the project to an XcodeGen description: brew install xcodegen, write a
+#  project.yml (target uses the Swift files in Sources/XiaoYuanDad plus
+#  Resources/index.html, bundleID com.xiaoyuan.dad.luxury), run xcodegen generate
+#  to create the .xcodeproj, then run:
+#    xcodebuild archive -project XiaoYuanDad.xcodeproj -scheme XiaoYuanDad \
+#      -destination 'generic/platform=iOS' -archivePath build/XiaoYuanDad.xcarchive \
+#      CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+#    mkdir -p Payload && cp -r build/XiaoYuanDad.xcarchive/Products/Applications/*.app Payload/
+#    zip -r XiaoYuanDad-unsigned.ipa Payload
