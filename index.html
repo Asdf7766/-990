@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>小圆爸爸专属 · 二奢模拟经营</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;background:#0d0b08;color:#f5e9c8;min-height:100vh}
+.wrap{max-width:480px;margin:0 auto;min-height:100vh;background:linear-gradient(180deg,#14100a 0%,#0d0b08 40%,#171208 100%);padding-bottom:96px}
+header{padding:18px 16px 10px;text-align:center;background:radial-gradient(ellipse at top,#3a2a10 0%,transparent 70%)}
+h1{font-size:26px;letter-spacing:3px;background:linear-gradient(90deg,#f9e08a,#c9962e,#fff0b0,#c9962e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{font-size:12px;color:#c9a86a;margin-top:4px;letter-spacing:2px}
+.goldline{height:2px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:10px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px}
+.stat{background:#1e1810;border:1px solid #6b5320;border-radius:12px;padding:8px 4px;text-align:center}
+.stat b{display:block;font-size:16px;color:#ffd76a}
+.stat span{font-size:11px;color:#bfa76a}
+.market{margin:12px 14px 0;background:#211a0e;border:1px solid #6b5320;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.7;color:#e8d49a}
+.market b{color:#ffd76a}
+.tabs{display:flex;gap:5px;padding:12px 14px 0;flex-wrap:wrap}
+.tabs button{flex:1;min-width:70px;padding:10px 0;border-radius:12px 12px 0 0;border:1px solid #6b5320;border-bottom:none;background:#171208;color:#c9a86a;font-size:13px;cursor:pointer}
+.tabs button.on{background:linear-gradient(180deg,#3a2a10,#241c0d);color:#ffd76a;font-weight:700}
+.panel{margin:0 14px;background:#1a150d;border:1px solid #6b5320;border-radius:0 0 14px 14px;padding:14px;min-height:420px}
+h2{font-size:16px;color:#ffd76a;margin-bottom:4px}
+.hint{font-size:12px;color:#a98f5f;line-height:1.6;margin-bottom:12px}
+.card{background:linear-gradient(135deg,#26200f,#181207);border:1px solid #8a6d2f;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.card.fake{border-color:#8a2f2f}
+.pimg{width:100%;height:150px;object-fit:cover;border-radius:10px;border:1px solid #6b5320;background:#0f0d08;margin-bottom:10px;display:block}
+.brandtag{display:inline-block;background:#d4af37;color:#111;font-size:11px;font-weight:800;padding:3px 8px;border-radius:20px;margin-right:6px}
+.cattag{display:inline-block;border:1px solid #d4af37;color:#ffd76a;font-size:11px;padding:3px 8px;border-radius:20px}
+.itemname{font-size:17px;font-weight:800;margin:9px 0 4px;color:#fff3c4}
+.meta{font-size:13px;color:#d8c08a;line-height:1.8}
+.meta b{color:#ffd76a}
+.clue{background:#0f0d08;border-left:3px solid #d4af37;padding:8px 10px;font-size:12px;color:#e8d49a;line-height:1.7;margin:8px 0;border-radius:0 8px 8px 0}
+.clue.warn{border-left-color:#c0392b;color:#f0b0a0}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+button.btn{flex:1;min-width:70px;padding:11px 6px;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.btn.gold{background:linear-gradient(180deg,#ffe082,#c9962e);color:#241a05}
+.btn.dark{background:#2a2314;color:#ffd76a;border:1px solid #8a6d2f}
+.btn.red{background:#5a1f1f;color:#ffd9d9;border:1px solid #8a2f2f}
+.btn:disabled{opacity:.45}
+.log{font-size:12px;line-height:1.9;color:#d8c08a}
+.log div{border-bottom:1px dashed #3a2f1a;padding:6px 0}
+.up{border:1px solid #8a6d2f;border-radius:12px;padding:12px;margin-bottom:10px;background:#211a0e}
+.up b{color:#ffd76a}
+.empty{text-align:center;color:#a98f5f;padding:30px 10px;font-size:13px;line-height:1.8}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:20px;overflow-y:auto}
+.modal.show{display:flex}
+.box{background:#1e1810;border:1px solid #d4af37;border-radius:16px;padding:20px;width:100%;max-width:380px;margin:auto}
+.box h3{color:#ffd76a;margin-bottom:10px}
+.box input[type=number],.box input[type=text],.box select,.box textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #8a6d2f;background:#0f0d08;color:#ffd76a;font-size:15px;margin:8px 0}
+.box textarea{min-height:70px;font-size:12px}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#d4af37;color:#111;padding:10px 18px;border-radius:30px;font-weight:700;font-size:13px;display:none;z-index:99;max-width:92vw;text-align:center}
+footer{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#14100a;border-top:1px solid #6b5320;padding:10px 14px;display:flex;gap:8px}
+footer button{flex:1;padding:13px 0;border-radius:12px;border:none;font-weight:800;font-size:15px;cursor:pointer}
+#endDay{background:linear-gradient(180deg,#ffe082,#c9962e);color:#241a05}
+#resetBtn{background:#2a2314;color:#c9a86a;border:1px solid #6b5320}
+.small{font-size:11px;color:#a98f5f}
+.tier{border:1px solid #8a6d2f;border-radius:12px;padding:12px;margin-bottom:10px;background:#211a0e}
+.tier b{color:#ffd76a}
+.slot{border:1px solid #8a6d2f;border-radius:12px;padding:12px;margin-bottom:10px;background:#211a0e}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>小圆爸爸专属</h1>
+<div class="sub">二奢 · 模拟经营 · 回收奢侈品</div>
+<div class="goldline"></div>
+</header>
+<div class="stats">
+<div class="stat"><b id="sMoney">¥50,000</b><span>资金</span></div>
+<div class="stat"><b id="sDay">第 1 天</b><span>经营天数</span></div>
+<div class="stat"><b id="sRep">50</b><span>声望</span></div>
+<div class="stat"><b id="sLevel">Lv.1</b><span>店铺等级</span></div>
+<div class="stat"><b id="sInv">0 件</b><span>库存</span></div>
+<div class="stat"><b id="sCredit">600</b><span>信用分</span></div>
+</div>
+<div class="market" id="marketBox">今日行情加载中…</div>
+<div class="tabs">
+<button class="on" data-tab="buy" onclick="switchTab('buy',this)">收货大厅</button>
+<button data-tab="inv" onclick="switchTab('inv',this)">我的库存</button>
+<button data-tab="bank" onclick="switchTab('bank',this)">银行</button>
+<button data-tab="gift" onclick="switchTab('gift',this)">兑换·存档</button>
+<button data-tab="shop" onclick="switchTab('shop',this)">店铺升级</button>
+<button data-tab="log" onclick="switchTab('log',this)">经营日志</button>
+</div>
+<div class="panel" id="panel"></div>
+</div>
+<footer>
+<button id="endDay" onclick="endDay()">结束今天 → 明天</button>
+<button id="resetBtn" onclick="resetGame()">重新开局</button>
+</footer>
+<div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+// ===== 商品库：品牌 + 具体型号 + 品类（包包/衣服/鞋子/名表），每品牌 3-4+ 型号 =====
+// shape: tote/flap/kelly/watch/shoe/coat/shirt ; color: 主色
+const CATALOG = [
+ {brand:'LV 路易威登',cat:'包包',model:'Neverfull',lo:8000,hi:16000,color:'#8a5a2b',shape:'tote'},
+ {brand:'LV 路易威登',cat:'包包',model:'Speedy',lo:7000,hi:15000,color:'#8a5a2b',shape:'tote'},
+ {brand:'LV 路易威登',cat:'包包',model:'OnTheGo',lo:12000,hi:24000,color:'#6b4a2f',shape:'tote'},
+ {brand:'LV 路易威登',cat:'衣服',model:'Monogram 风衣',lo:15000,hi:30000,color:'#3a2f22',shape:'coat'},
+ {brand:'LV 路易威登',cat:'鞋子',model:'LV Trainer 运动鞋',lo:6000,hi:12000,color:'#f0e6d0',shape:'shoe'},
+ {brand:'Gucci 古驰',cat:'包包',model:'GG Marmont 肩包',lo:9000,hi:18000,color:'#7a2e2e',shape:'flap'},
+ {brand:'Gucci 古驰',cat:'包包',model:'Dionysus 酒神包',lo:11000,hi:22000,color:'#2f4a2f',shape:'flap'},
+ {brand:'Gucci 古驰',cat:'包包',model:'Horsebit 1955 手袋',lo:10000,hi:20000,color:'#5a3a22',shape:'kelly'},
+ {brand:'Gucci 古驰',cat:'衣服',model:'印花丝绸衬衫',lo:5000,hi:11000,color:'#c9a86a',shape:'shirt'},
+ {brand:'Gucci 古驰',cat:'鞋子',model:'Ace 小白鞋',lo:4000,hi:8000,color:'#f0e6d0',shape:'shoe'},
+ {brand:'Chanel 香奈儿',cat:'包包',model:'Classic Flap 经典翻盖包',lo:35000,hi:70000,color:'#111111',shape:'flap'},
+ {brand:'Chanel 香奈儿',cat:'包包',model:'Boy Chanel',lo:28000,hi:55000,color:'#222222',shape:'flap'},
+ {brand:'Chanel 香奈儿',cat:'包包',model:'2.55 手袋',lo:30000,hi:60000,color:'#3a2a1a',shape:'flap'},
+ {brand:'Chanel 香奈儿',cat:'衣服',model:'粗花呢外套',lo:20000,hi:42000,color:'#d8c8b0',shape:'coat'},
+ {brand:'Chanel 香奈儿',cat:'鞋子',model:'双色 Slingback 露跟鞋',lo:6000,hi:11000,color:'#111111',shape:'shoe'},
+ {brand:'Hermès 爱马仕',cat:'包包',model:'Birkin 铂金包',lo:80000,hi:180000,color:'#c98a2e',shape:'kelly'},
+ {brand:'Hermès 爱马仕',cat:'包包',model:'Kelly 凯莉包',lo:70000,hi:150000,color:'#2f2f2f',shape:'kelly'},
+ {brand:'Hermès 爱马仕',cat:'包包',model:'Constance 康康包',lo:50000,hi:110000,color:'#8a2f2f',shape:'flap'},
+ {brand:'Hermès 爱马仕',cat:'衣服',model:'羊绒大衣',lo:25000,hi:50000,color:'#5a4632',shape:'coat'},
+ {brand:'Hermès 爱马仕',cat:'鞋子',model:'Oran 凉鞋',lo:4000,hi:7000,color:'#c98a2e',shape:'shoe'},
+ {brand:'Prada 普拉达',cat:'包包',model:'Galleria 手袋',lo:12000,hi:24000,color:'#111111',shape:'kelly'},
+ {brand:'Prada 普拉达',cat:'包包',model:'Re-Edition 腋下包',lo:8000,hi:16000,color:'#222222',shape:'flap'},
+ {brand:'Prada 普拉达',cat:'包包',model:'尼龙 Hobo 包',lo:6000,hi:12000,color:'#2f2f4a',shape:'tote'},
+ {brand:'Prada 普拉达',cat:'衣服',model:'三角标夹克',lo:9000,hi:18000,color:'#111111',shape:'coat'},
+ {brand:'Prada 普拉达',cat:'鞋子',model:'Monolith 厚底鞋',lo:5000,hi:10000,color:'#111111',shape:'shoe'},
+ {brand:'Rolex 劳力士',cat:'名表',model:'迪通拿 Daytona',lo:120000,hi:280000,color:'#111111',shape:'watch'},
+ {brand:'Rolex 劳力士',cat:'名表',model:'日志型 Datejust',lo:50000,hi:120000,color:'#2f4a6b',shape:'watch'},
+ {brand:'Rolex 劳力士',cat:'名表',model:'潜航者 Submariner',lo:60000,hi:140000,color:'#1a3a2a',shape:'watch'},
+ {brand:'Rolex 劳力士',cat:'名表',model:'格林尼治 GMT-Master II',lo:70000,hi:160000,color:'#2f2f4a',shape:'watch'},
+ {brand:'Patek Philippe 百达翡丽',cat:'名表',model:'鹦鹉螺 Nautilus 5711',lo:300000,hi:900000,color:'#2f4a6b',shape:'watch'},
+ {brand:'Patek Philippe 百达翡丽',cat:'名表',model:'Calatrava 5196',lo:120000,hi:280000,color:'#f0e6d0',shape:'watch'},
+ {brand:'Patek Philippe 百达翡丽',cat:'名表',model:'Aquanaut 手雷 5167',lo:150000,hi:350000,color:'#3a2a1a',shape:'watch'},
+ {brand:'Vacheron Constantin 江诗丹顿',cat:'名表',model:'纵横四海 Overseas',lo:100000,hi:260000,color:'#2f4a6b',shape:'watch'},
+ {brand:'Vacheron Constantin 江诗丹顿',cat:'名表',model:'Patrimony 传承 81180',lo:80000,hi:200000,color:'#f0e6d0',shape:'watch'},
+ {brand:'Vacheron Constantin 江诗丹顿',cat:'名表',model:'伍陆之型 Fiftysix',lo:80000,hi:180000,color:'#5a4632',shape:'watch'},
+ {brand:'Richard Mille 理查德米勒',cat:'名表',model:'RM 011 飞返计时',lo:800000,hi:1800000,color:'#111111',shape:'watch'},
+ {brand:'Richard Mille 理查德米勒',cat:'名表',model:'RM 035',lo:600000,hi:1500000,color:'#2f2f2f',shape:'watch'},
+ {brand:'Richard Mille 理查德米勒',cat:'名表',model:'RM 07-01',lo:300000,hi:800000,color:'#f0e6d0',shape:'watch'},
+];
+// 每款 distinct 的 SVG 产品图：按品类/款型/配色画，离线必加载，型号名写在图上
+function svgFor(it){
+  const c = it.color || '#8a6d2f';
+  const label = (it.brand.split(' ')[0] + ' ' + it.model).replace(/&/g,'&amp;');
+  let body = '';
+  if(it.cat==='名表'){
+    body = '<rect x="70" y="8" width="60" height="26" rx="8" fill="#222"/><rect x="70" y="166" width="60" height="26" rx="8" fill="#222"/><circle cx="100" cy="100" r="52" fill="'+c+'" stroke="#d4af37" stroke-width="4"/><circle cx="100" cy="100" r="40" fill="#f5e9c8"/><circle cx="100" cy="100" r="4" fill="#111"/><line x1="100" y1="100" x2="100" y2="70" stroke="#111" stroke-width="4"/><line x1="100" y1="100" x2="122" y2="108" stroke="#111" stroke-width="3"/><circle cx="100" cy="82" r="3" fill="#c0392b"/>';
+  } else if(it.cat==='鞋子'){
+    body = '<path d="M25 130 L60 95 L95 95 L150 105 L175 125 Q180 135 170 135 L30 135 Q20 135 25 130 Z" fill="'+c+'" stroke="#d4af37" stroke-width="3"/><rect x="60" y="88" width="55" height="12" rx="6" fill="#fff" opacity="0.85"/><line x1="30" y1="135" x2="175" y2="135" stroke="#fff" stroke-width="6"/>';
+  } else if(it.cat==='衣服'){
+    body = '<path d="M70 30 L50 45 L35 90 L55 95 L60 80 L60 165 L140 165 L140 80 L145 95 L165 90 L150 45 L130 30 Q115 45 100 45 Q85 45 70 30 Z" fill="'+c+'" stroke="#d4af37" stroke-width="3"/><line x1="100" y1="45" x2="100" y2="165" stroke="#d4af37" stroke-width="2"/><circle cx="100" cy="80" r="4" fill="#d4af37"/><circle cx="100" cy="110" r="4" fill="#d4af37"/><circle cx="100" cy="140" r="4" fill="#d4af37"/>';
+  } else if(it.shape==='flap'){
+    body = '<rect x="45" y="70" width="110" height="75" rx="10" fill="'+c+'" stroke="#d4af37" stroke-width="3"/><rect x="45" y="70" width="110" height="32" rx="10" fill="'+c+'" stroke="#d4af37" stroke-width="2"/><rect x="88" y="98" width="24" height="16" rx="4" fill="#d4af37"/><path d="M65 70 Q65 35 100 35 Q135 35 135 70" fill="none" stroke="#d4af37" stroke-width="4"/>';
+  } else if(it.shape==='kelly'){
+    body = '<rect x="50" y="65" width="100" height="80" rx="8" fill="'+c+'" stroke="#d4af37" stroke-width="3"/><path d="M75 65 Q75 38 100 38 Q125 38 125 65" fill="none" stroke="#d4af37" stroke-width="4"/><rect x="92" y="100" width="16" height="22" rx="3" fill="#d4af37"/><line x1="50" y1="105" x2="150" y2="105" stroke="#d4af37" stroke-width="2"/>';
+  } else {
+    body = '<path d="M55 75 L145 75 L155 145 Q155 152 148 152 L52 152 Q45 152 45 145 Z" fill="'+c+'" stroke="#d4af37" stroke-width="3"/><path d="M70 75 Q70 35 100 35 Q130 35 130 75" fill="none" stroke="#d4af37" stroke-width="5"/><line x1="55" y1="95" x2="145" y2="95" stroke="#d4af37" stroke-width="2"/>';
+  }
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 200 200"><rect width="200" height="200" fill="#14100a"/><rect x="8" y="8" width="184" height="184" rx="12" fill="#1e1810" stroke="#6b5320"/>'+body+'<text x="100" y="188" font-size="11" fill="#ffd76a" text-anchor="middle" font-family="sans-serif">'+label+'</text></svg>';
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+const CONDS = [
+ {name:'全新', mult:1.0, label:'全新未使用，附件齐全'},
+ {name:'九成新', mult:0.82, label:'九成新，轻微使用痕迹'},
+ {name:'八成新', mult:0.65, label:'八成新，边角轻微磨损'},
+ {name:'七成新', mult:0.5, label:'七成新，明显使用痕迹，需翻新'},
+];
+const NAMES = ['陈小姐','王先生','李太太','张总','刘女士','赵先生','林小姐','周先生','吴女士','郑先生','何小姐','孙先生'];
+const CLUES_TRUE = ['皮质细腻均匀，五金刻字清晰','走线工整，针距均匀，无跳线','防伪芯片 / 刻字与证书编号一致','机芯走时精准，表盘细节完美','气味自然，无刺鼻胶味'];
+const CLUES_FAKE = ['皮质偏硬，五金颜色发暗','走线歪斜，线头较多','刻字模糊深浅不一，证书存疑','机芯声音发闷，表盘印刷粗糙','有刺鼻胶味，里衬做工粗糙'];
+const UPGRADES = [
+ {id:'decor', name:'店面装修', desc:'店铺更华丽，每天多来 1 位卖家，成交率提升', base:8000},
+ {id:'ads', name:'宣传推广', desc:'名气更大，每天多来 1 位买家，出价更高', base:6000},
+ {id:'tool', name:'鉴定工具', desc:'店内鉴定设备更好，但请师傅仍按师傅档位算', base:10000},
+ {id:'vip', name:'VIP 贵宾室', desc:'吸引大客户，稀有藏品出现概率翻倍', base:15000},
+];
+// 鉴定师傅三档：费用按商品价比例，上限 5-10%，绝不比商品贵
+const APPRAISERS = [
+ {name:'入门师傅', acc:0.60, rate:0.02, min:50, max:500, desc:'便宜，但只有 60% 准，可能把假认成真、把真认成假'},
+ {name:'中级师傅', acc:0.90, rate:0.04, min:100, max:1500, desc:'90% 准，性价比高，仍有 10% 看错风险'},
+ {name:'顶级鉴定大师', acc:1.00, rate:0.06, min:200, max:3000, desc:'100% 准，最贵，但绝不错判'},
+];
+function appraiserFee(price, tier){ const t = APPRAISERS[tier]; let f = Math.round(price * t.rate / 10) * 10; f = Math.max(t.min, Math.min(t.max, f)); f = Math.min(f, Math.max(50, Math.floor(price * 0.10))); return f; }
+const REDEEM_CODES = {'代号1':10000000, '55544':100000000};
+
+let S = null;
+function defaultState(){
+ return {money:50000, day:1, rep:50, level:1, profit:0, deals:0, inv:[], customers:[], log:[], up:{decor:0,ads:0,tool:0,vip:0}, market:{}, credit:600, loans:[], redeemed:{}, loanSeq:1};
+}
+function migrate(s){
+ s.credit = (s.credit==null?600:s.credit); s.loans = s.loans||[]; s.redeemed = s.redeemed||{}; s.loanSeq = s.loanSeq||1; s.up = s.up||{decor:0,ads:0,tool:0,vip:0}; s.market = s.market||{}; return s;
+}
+function save(){ try{ localStorage.setItem('xiaoyuan-dad-save-v1', JSON.stringify(S)); }catch(e){} }
+function load(){
+ try{ const r = localStorage.getItem('xiaoyuan-dad-save-v1'); if(r){ S = migrate(JSON.parse(r)); return; } }catch(e){}
+ S = defaultState();
+}
+function fmt(n){ return '¥' + Math.round(n).toLocaleString('zh-CN'); }
+function rand(a,b){ return a + Math.random()*(b-a); }
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.style.display='block'; setTimeout(()=>el.style.display='none',3000); }
+function log(t){ S.log.unshift('第'+S.day+'天 · '+t); if(S.log.length>80) S.log.pop(); }
+function marketInit(){ S.market = {}; CATALOG.forEach(c=>{ if(!(c.brand in S.market)) S.market[c.brand] = rand(0.92,1.12); }); }
+function marketDrift(){ Object.keys(S.market).forEach(k=>{ let m = S.market[k] * rand(0.94,1.07); S.market[k] = Math.max(0.75, Math.min(1.35, m)); }); }
+function genItem(){
+ // 70% 出包包/衣服/鞋子，30% 出名表；名表贵、稀有
+ const pool = Math.random()<0.7 ? CATALOG.filter(c=>c.cat!=='名表') : CATALOG.filter(c=>c.cat==='名表');
+ const c = pick(pool);
+ const cond = pick(CONDS);
+ const nominal = Math.round(rand(c.lo, c.hi) * cond.mult * (S.market[c.brand]||1) / 100) * 100;
+ const isFake = Math.random() < 0.25;
+ const trueValue = isFake ? Math.round(nominal*0.15/100)*100 : nominal;
+ const ask = isFake ? Math.round(nominal * rand(0.5,0.75)/100)*100 : Math.round(trueValue * rand(0.55,0.85) / 100) * 100;
+ return {id:Date.now()+Math.random(), brand:c.brand, cat:c.cat, model:c.model, color:c.color, shape:c.shape, cond:cond.name, condLabel:cond.label, nominal, trueValue, ask, isFake, minAccept: Math.round(ask*rand(0.72,0.9)/100)*100, identified:false, identResult:null, appraiser:null, secondIdentified:false, secondResult:null, secondAppraiser:null, rounds:0, seller:pick(NAMES), negotiated:null};
+}
+function genAffordableItem(){
+ const cheap = CATALOG.filter(c=>c.cat!=='名表');
+ for(let tries=0; tries<20; tries++){
+   const it = genItem();
+   if(cheap.some(b=>b.brand===it.brand && b.model===it.model) && it.ask <= Math.min(40000, Math.max(15000, S.money*0.8))) return it;
+ }
+ const it = genItem(); it.ask = Math.min(it.ask, 30000); it.minAccept = Math.round(it.ask*0.8/100)*100; it.trueValue = Math.max(it.trueValue, it.ask); return it;
+}
+function genCustomers(){
+ const n = 3 + S.up.decor + (Math.random()<0.3?1:0);
+ S.customers = [];
+ for(let i=0;i<n;i++) S.customers.push(genItem());
+ let affordable = S.customers.filter(c=>c.ask <= S.money).length;
+ let guard = 0;
+ while(affordable < 2 && guard < 5){ S.customers[guard % S.customers.length] = genAffordableItem(); affordable = S.customers.filter(c=>c.ask <= S.money).length; guard++; }
+ if(Math.random() < 0.08 + S.up.vip*0.08){
+   const it = genItem(); it.model = '★ 稀有藏品 · ' + it.model; it.nominal = Math.round(it.nominal*1.8/100)*100; it.trueValue = it.isFake? Math.round(it.trueValue*1.8/100)*100 : it.nominal; it.ask = Math.round(it.trueValue*0.7/100)*100; it.minAccept = Math.round(it.ask*0.85/100)*100; S.customers.push(it); log('稀有藏品出现：'+it.brand+' '+it.model);
+ }
+}
+// ===== 银行 =====
+function rateFor(credit){ if(credit>=750) return 0.0435; if(credit>=600) return 0.058; if(credit>=550) return 0.072; if(credit>=500) return 0.09; return 0.108; }
+function limitFor(credit){ if(credit>=750) return 500000; if(credit>=700) return 300000; if(credit>=650) return 200000; if(credit>=600) return 150000; if(credit>=550) return 80000; if(credit>=500) return 30000; return 0; }
+function activeLoans(){ return S.loans.filter(l=>l.status==='进行中'); }
+function loanMonthly(l){ return Math.round(l.principal * (1 + l.rate * l.months/12) / l.months / 100) * 100; }
+function loanTotalInterest(l){ return Math.round(l.principal * l.rate * l.months/12 / 100) * 100; }
+function nextDueDay(l){ return l.startDay + (l.paidMonths+1)*10; } // 游戏里 1 个月 = 10 天
+function borrow(amount, months, method){
+ amount = Math.round(amount/100)*100;
+ if(!amount || amount<=0) return toast('请输入借款金额');
+ if(amount > limitFor(S.credit)) return toast('超过可借额度（当前可借 '+fmt(limitFor(S.credit))+'）');
+ if(activeLoans().length>=3) return toast('同时最多 3 笔贷款，先还一笔');
+ const rate = rateFor(S.credit);
+ const loan = {id:S.loanSeq++, principal:amount, months, method, rate, startDay:S.day, dueDay:S.day+months*10, paidMonths:0, paidTotal:0, status:'进行中', overdue:false};
+ S.loans.push(loan); S.money += amount;
+ log('银行借款 '+fmt(amount)+'，'+months+'个月，'+method+'，年利率 '+(rate*100).toFixed(2)+'%');
+ toast('借款成功，到账 '+fmt(amount)); render();
+}
+function payInstallment(id){
+ const l = S.loans.find(x=>x.id===id); if(!l||l.status!=='进行中') return;
+ const due = loanMonthly(l) * (l.overdue?1.05:1);
+ if(S.money < due) return toast('资金不足，无法还款');
+ S.money -= due; l.paidTotal += due; l.paidMonths++; l.overdue = false;
+ if(l.paidMonths >= l.months){ l.status='已还清'; S.credit = Math.min(850, S.credit+10); log('贷款已还清（分期 '+l.months+' 期），信用分 +10 → '+S.credit); toast('本笔贷款已还清！信用分 +10'); }
+ else { S.credit = Math.min(850, S.credit+2); log('按期还款第 '+l.paidMonths+'/'+l.months+' 期 '+fmt(due)+'，信用分 +2 → '+S.credit); toast('已还第 '+l.paidMonths+' 期'); }
+ render();
+}
+function payLump(id){
+ const l = S.loans.find(x=>x.id===id); if(!l||l.status!=='进行中') return;
+ const total = l.principal + loanTotalInterest(l) + (l.overdue? Math.round(l.principal*0.02/100)*100 : 0);
+ if(S.money < total) return toast('资金不足，无法一次还清');
+ S.money -= total; l.paidTotal += total; l.status='已还清';
+ S.credit = Math.min(850, S.credit + (l.overdue?0:15));
+ log('一次还清贷款 '+fmt(total)+'（本金 '+fmt(l.principal)+' + 利息 '+fmt(loanTotalInterest(l))+'），信用分 '+(l.overdue?'未加（曾逾期）':' +15 → '+S.credit));
+ toast('一次还清成功！'); render();
+}
+// ===== 兑换 =====
+function redeem(code){
+ code = (code||'').trim();
+ if(!(code in REDEEM_CODES)) return toast('兑换码无效，请检查');
+ if(S.redeemed[code]) return toast('该兑换码已使用过，不能重复领取');
+ const amt = REDEEM_CODES[code];
+ S.redeemed[code] = true; S.money += amt;
+ log('兑换成功：'+code+'，获得 '+fmt(amt)+' 现金');
+ openModal('<h3>兑换成功</h3><div class="meta" style="font-size:16px">兑换码 <b>'+code+'</b><br>获得现金：<b style="font-size:22px">'+fmt(amt)+'</b><br>当前资金：<b>'+fmt(S.money)+'</b></div><div class="btnrow"><button class="btn gold" onclick="closeModal()">收下</button></div>');
+ render();
+}
+// ===== 存档 =====
+function saveSlot(n){
+ try{ localStorage.setItem('xiaoyuan-dad-save-slot'+n, JSON.stringify(S)); toast('已保存到存档位 '+n); log('手动存档到存档位 '+n); render(); }catch(e){ toast('保存失败'); }
+}
+function loadSlot(n){
+ try{ const r = localStorage.getItem('xiaoyuan-dad-save-slot'+n); if(!r) return toast('存档位 '+n+' 是空的'); S = migrate(JSON.parse(r)); save(); toast('已读档：存档位 '+n); log('读档：存档位 '+n); render(); }catch(e){ toast('读档失败'); }
+}
+function exportCode(){
+ const code = btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+ document.getElementById('exportBox').value = code;
+}
+function importCode(){
+ const v = document.getElementById('importBox').value.trim();
+ if(!v) return toast('请先粘贴存档码');
+ try{ S = migrate(JSON.parse(decodeURIComponent(escape(atob(v))))); save(); toast('导入存档成功'); render(); }catch(e){ toast('存档码无效'); }
+}
+// ===== 渲染 =====
+function render(){
+ document.getElementById('sMoney').textContent = fmt(S.money);
+ document.getElementById('sDay').textContent = '第 '+S.day+' 天';
+ document.getElementById('sRep').textContent = S.rep;
+ document.getElementById('sLevel').textContent = 'Lv.'+S.level;
+ document.getElementById('sInv').textContent = S.inv.length+' 件';
+ document.getElementById('sCredit').textContent = S.credit;
+ const ups = Object.entries(S.market).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=> k.split(' ')[0]+' '+(v>=1?'▲':'▼')+Math.round((v-1)*100)+'%').join(' · ');
+ document.getElementById('marketBox').innerHTML = '<b>今日行情</b> · '+ups+'<br><span class="small">行情每天波动。信用分 '+S.credit+'，可借额度 '+fmt(limitFor(S.credit))+'。1 个月 = 10 天。</span>';
+ const tab = document.querySelector('.tabs button.on').dataset.tab;
+ if(tab==='buy') renderBuy();
+ else if(tab==='inv') renderInv();
+ else if(tab==='bank') renderBank();
+ else if(tab==='gift') renderGift();
+ else if(tab==='shop') renderShop();
+ else renderLog();
+ save();
+}
+function switchTab(t, btn){ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on')); btn.classList.add('on'); render(); }
+function authText(it){
+ if(it.identified) return it.identResult==='fake' ? '⚠ 鉴定：疑似假货（'+(it.appraiser||'')+'）' : '✓ 鉴定：大概率真品（'+(it.appraiser||'')+'）';
+ return '真伪：未鉴定';
+}
+function priceLines(it, isBuy){
+ const ref = fmt(it.nominal);
+ const buy = isBuy ? fmt(it.negotiated||it.ask) : fmt(it.buyPrice);
+ const sell = fmt(Math.round(it.trueValue*1.0/100)*100);
+ return '参考价：<b>'+ref+'</b> · 收购价/买入价：<b>'+buy+'</b><br>预估出售价：<b>'+sell+'</b>（行情价，假货真值仅约 15%）';
+}
+function renderBuy(){
+ const p = document.getElementById('panel');
+ if(!S.customers.length){ p.innerHTML = '<h2>收货大厅</h2><div class="empty">今天的卖家都走了<br>点击「结束今天」迎接明天的新顾客</div>'; return; }
+ let h = '<h2>收货大厅 · 今天还有 '+S.customers.length+' 位卖家</h2><div class="hint">每件商品都有具体品牌 + 型号 + 配图。先请鉴定师傅鉴定再砍价，别被高仿坑了。鉴定费按商品价比例收，最高不超过商品价 10%。</div>';
+ S.customers.forEach((c,i)=>{
+   const clues = c.identified ? pick(c.identResult==='fake'?CLUES_FAKE:CLUES_TRUE) : null;
+   h += '<div class="card'+(c.identified&&c.identResult==='fake'?' fake':'')+'">'
+   + '<img class="pimg" src="'+svgFor(c)+'" alt="'+c.brand+' '+c.model+'">'
+   + '<span class="brandtag">'+c.brand+'</span><span class="cattag">'+c.cat+' · '+c.cond+'</span>'
+   + '<div class="itemname">'+c.model+'</div>'
+   + '<div class="meta">卖家：'+c.seller+'<br>'+c.condLabel+'<br>'+priceLines(c,true)
+   + '<br>'+authText(c)
+   + (c.negotiated? '<br>已谈价：<b>'+fmt(c.negotiated)+'</b>' : '')
+   + '</div>'
+   + (clues? '<div class="clue">鉴定提示：'+clues+'</div>':'')
+   + '<div class="btnrow">'
+   + '<button class="btn dark" onclick="openAppraiser('+i+',\'buy\')">请鉴定师傅</button>'
+   + '<button class="btn dark" onclick="bargain('+i+')">砍价</button>'
+   + '<button class="btn gold" onclick="buyItem('+i+')">收购 '+(c.negotiated?fmt(c.negotiated):fmt(c.ask))+'</button>'
+   + '<button class="btn red" onclick="rejectItem('+i+')">拒绝</button>'
+   + '</div></div>';
+ });
+ p.innerHTML = h;
+}
+// 鉴定师傅选择弹窗：buy=收货时，inv=仓库二次鉴定
+function openAppraiser(idx, where){
+ const it = where==='buy' ? S.customers[idx] : S.inv[idx];
+ if(!it) return;
+ const price = where==='buy' ? (it.negotiated||it.ask) : (it.buyPrice||it.trueValue);
+ let h = '<h3>请鉴定师傅 · '+it.model+'</h3><div class="meta">商品价：<b>'+fmt(price)+'</b><br>费用按商品价比例，不超过 10%，绝不比商品贵。</div>';
+ APPRAISERS.forEach((t,ti)=>{
+   const fee = appraiserFee(price, ti);
+   h += '<div class="tier"><b>'+t.name+'</b> · 准确率 '+(t.acc*100)+'%<br><span class="small">'+t.desc+'</span><br>鉴定费：<b>'+fmt(fee)+'</b><div class="btnrow"><button class="btn gold" onclick="doAppraise('+idx+',\''+where+'\','+ti+','+fee+')">请这位师傅</button></div></div>';
+ });
+ h += '<div class="btnrow"><button class="btn dark" onclick="closeModal()">先不鉴定</button></div>';
+ openModal(h);
+}
+function doAppraise(idx, where, tier, fee){
+ const it = where==='buy' ? S.customers[idx] : S.inv[idx];
+ if(!it) return;
+ if(S.money < fee){ closeModal(); return toast('资金不足，付不起鉴定费'); }
+ S.money -= fee;
+ const t = APPRAISERS[tier];
+ const correct = Math.random() < t.acc;
+ const result = correct ? (it.isFake?'fake':'real') : (it.isFake?'real':'fake');
+ if(where==='buy'){ it.identified = true; it.identResult = result; it.appraiser = t.name; }
+ else { it.secondIdentified = true; it.secondResult = result; it.secondAppraiser = t.name; it.identified = true; it.identResult = result; it.appraiser = t.name + '（仓库二次鉴定）'; }
+ closeModal();
+ log('鉴定（'+t.name+'，费 '+fmt(fee)+'）：'+it.brand+' '+it.model+' → '+(result==='fake'?'疑似假货':'大概率真品')+(correct?'':'（注意：该档位可能看错）'));
+ toast(result==='fake'?'鉴定：疑似高仿，小心！':'鉴定：大概率真品');
+ render();
+}
+function bargain(i){
+ const c = S.customers[i]; if(!c) return;
+ openModal('<h3>砍价 · '+c.model+'</h3><div class="meta">卖家要价 <b>'+fmt(c.ask)+'</b> · 底线未知<br>出价太低可能谈崩（第 '+(c.rounds+1)+'/2 轮）</div><input type="number" id="offerInput" value="'+Math.round(c.ask*0.8/100)*100+'"><div class="btnrow"><button class="btn gold" onclick="submitBargain('+i+')">出价</button><button class="btn dark" onclick="closeModal()">取消</button></div>');
+}
+function submitBargain(i){
+ const c = S.customers[i]; const v = Number(document.getElementById('offerInput').value);
+ if(!v||v<=0){ toast('请输入有效出价'); return; }
+ closeModal(); c.rounds++;
+ if(v >= c.minAccept){ c.negotiated = v; log('砍价成功：'+c.model+' 谈到 '+fmt(v)); toast('砍价成功！谈到 '+fmt(v)); }
+ else {
+   if(Math.random()<0.5){ log('砍价谈崩：'+c.seller+' 生气走了（'+c.model+'）'); S.customers.splice(i,1); toast('谈崩了，卖家走了…'); }
+   else { const counter = Math.round((v + c.minAccept)/2/100)*100; c.ask = counter; log('对方还价 '+fmt(counter)+'（'+c.model+'）'); toast('对方还价 '+fmt(counter)+'，可以再谈'); }
+ }
+ render();
+}
+function buyItem(i){
+ const c = S.customers[i]; if(!c) return;
+ const price = c.negotiated || c.ask;
+ if(S.money < price){ toast('资金不足！先卖掉库存回血，或去银行借款'); return; }
+ S.money -= price;
+ S.inv.push({id:c.id, brand:c.brand, cat:c.cat, model:c.model, color:c.color, shape:c.shape, cond:c.cond, buyPrice:price, trueValue:c.trueValue, nominal:c.nominal, isFake:c.isFake, identified:c.identified, identResult:c.identResult, appraiser:c.appraiser, secondIdentified:false, secondResult:null, secondAppraiser:null});
+ S.deals++;
+ if(c.isFake && !c.identified) log('⚠ 收了一件未鉴定的货：'+c.brand+' '+c.model+'（真伪未知，入库后请二次鉴定）');
+ else log('收购：'+c.brand+' '+c.model+'，花了 '+fmt(price));
+ S.customers.splice(i,1); toast('收购成功，已入库，记得仓库二次鉴定'); render();
+}
+function rejectItem(i){ const c = S.customers[i]; log('拒绝收购：'+c.brand+' '+c.model); S.customers.splice(i,1); render(); }
+function renderInv(){
+ const p = document.getElementById('panel');
+ let h = '<h2>我的库存 · '+S.inv.length+' 件</h2><div class="hint">入库后需二次鉴定：每件库存都可以再请师傅鉴定一次，二次鉴定同样可选三档师傅。未二次鉴定的货卖出纠纷风险更高。</div>';
+ if(!S.inv.length){ h += '<div class="empty">库存是空的<br>去收货大厅低价收好货，再高价卖出</div>'; }
+ S.inv.forEach((it,i)=>{
+   h += '<div class="card'+(it.identified&&it.identResult==='fake'?' fake':'')+'">'
+   + '<img class="pimg" src="'+svgFor(it)+'" alt="'+it.brand+' '+it.model+'">'
+   + '<span class="brandtag">'+it.brand+'</span><span class="cattag">'+it.cat+' · '+it.cond+'</span><div class="itemname">'+it.model+'</div>'
+   + '<div class="meta">'+priceLines(it,false)+'<br>'+authText(it)
+   + '<br>仓库二次鉴定：<b>'+(it.secondIdentified ? (it.secondResult==='fake'?'疑似假货（'+it.secondAppraiser+'）':'大概率真品（'+it.secondAppraiser+'）') : '未做')+'</b></div>'
+   + '<div class="btnrow"><button class="btn dark" onclick="openAppraiser('+i+',\'inv\')">仓库二次鉴定</button><button class="btn gold" onclick="sellItem('+i+')">出售</button><button class="btn dark" onclick="quickSell('+i+')">快速变现 90%</button></div></div>';
+ });
+ p.innerHTML = h;
+}
+function sellItem(i){
+ const it = S.inv[i]; if(!it) return;
+ const buyer = pick(NAMES);
+ const mult = rand(0.85,1.12) * (1 + S.rep/500) * (1 + S.up.ads*0.05);
+ const offer = Math.round(it.trueValue * mult /100)*100;
+ openModal('<h3>买家出价 · '+buyer+'</h3><div class="meta">'+it.brand+' '+it.model+'<br>买家出价：<b style="font-size:20px">'+fmt(offer)+'</b><br>你的买入价：'+fmt(it.buyPrice)+' · 参考价 '+fmt(it.nominal)+' · 估值 '+fmt(it.trueValue)+'</div><div class="btnrow"><button class="btn gold" onclick="acceptSell('+i+','+offer+')">接受成交</button><button class="btn dark" onclick="counterSell('+i+','+offer+')">再抬一口</button><button class="btn red" onclick="closeModal()">不卖了</button></div>');
+}
+function counterSell(i, offer){
+ const it = S.inv[i]; const up = Math.round(offer*1.12/100)*100;
+ if(Math.random()<0.6){ closeModal(); acceptSell(i, up, true); }
+ else { closeModal(); toast('买家嫌贵，走了…'); log('买家被抬价吓走：'+it.model); }
+}
+function acceptSell(i, price){
+ const it = S.inv[i]; if(!it) return;
+ closeModal();
+ S.money += price; const prof = price - it.buyPrice; S.profit += prof; S.deals++;
+ S.inv.splice(i,1);
+ const risk = it.isFake ? (it.secondIdentified ? 0.45 : 0.65) : 0;
+ if(it.isFake && Math.random()<risk){
+   const fine = 5000; S.money -= fine; S.rep = Math.max(0, S.rep-12);
+   log('⚠ 假货纠纷！买家发现 '+it.model+' 是高仿，罚款 '+fmt(fine)+'，声望 -12'); toast('假货纠纷！罚款 '+fmt(fine));
+ } else {
+   S.rep = Math.min(100, S.rep+2);
+   log('售出：'+it.brand+' '+it.model+'，卖了 '+fmt(price)+'，利润 '+(prof>=0?'+':'')+fmt(prof)); toast('成交！利润 '+(prof>=0?'+':'')+fmt(prof));
+ }
+ if(S.money>=200000 && S.level<5){ S.level++; log('店铺升级！达到 Lv.'+S.level); toast('店铺升级到 Lv.'+S.level+'！'); }
+ render();
+}
+function quickSell(i){ const it = S.inv[i]; if(!it) return; const price = Math.round(it.trueValue*0.9/100)*100; acceptSell(i, price); }
+function renderBank(){
+ const p = document.getElementById('panel');
+ const rate = rateFor(S.credit), limit = limitFor(S.credit);
+ let h = '<h2>银行</h2><div class="hint">初始信用分 600。按时还款涨分、逾期扣分；信用分越高可借额度越大，利率越低。游戏里 1 个月 = 10 天。</div>'
+ + '<div class="up"><b>信用分：'+S.credit+'</b>（350-850）<br>当前年利率：<b>'+(rate*100).toFixed(2)+'%</b> · 可借额度：<b>'+fmt(limit)+'</b><br>进行中贷款：<b>'+activeLoans().length+' / 3 笔</b></div>'
+ + '<div class="up"><b>借款</b><div class="meta">金额（¥）</div><input type="number" id="loanAmt" value="50000" style="width:100%;padding:10px;border-radius:8px;border:1px solid #8a6d2f;background:#0f0d08;color:#ffd76a;font-size:15px;margin:6px 0">'
+ + '<div class="meta">借款月数</div><select id="loanMonths" style="width:100%;padding:10px;border-radius:8px;border:1px solid #8a6d2f;background:#0f0d08;color:#ffd76a;margin:6px 0"><option value="3">3 个月</option><option value="6" selected>6 个月</option><option value="12">12 个月</option></select>'
+ + '<div class="meta">还款方式</div><select id="loanMethod" style="width:100%;padding:10px;border-radius:8px;border:1px solid #8a6d2f;background:#0f0d08;color:#ffd76a;margin:6px 0"><option value="分期还款">分期还款（每月还一期）</option><option value="一次还清">一次还清（到期连本带息一次还）</option></select>'
+ + '<div class="btnrow"><button class="btn dark" onclick="previewLoan()">算一下利息</button><button class="btn gold" onclick="doBorrow()">确认借款</button></div><div id="loanPreview" class="clue">点“算一下利息”查看每月应还、总利息、到期日。</div></div>';
+ if(!S.loans.length){ h += '<div class="empty">还没有贷款记录</div>'; }
+ S.loans.slice().reverse().forEach(l=>{
+   const totalInt = loanTotalInterest(l);
+   h += '<div class="up"><b>贷款 #'+l.id+' · '+fmt(l.principal)+' · '+l.months+'个月 · '+l.method+'</b> · '+l.status
+   + '<div class="meta">年利率 '+(l.rate*100).toFixed(2)+'% · 总利息 '+fmt(totalInt)
+   + '<br>到期日：第 '+l.dueDay+' 天（今天第 '+S.day+' 天）'
+   + (l.method==='分期还款' ? '<br>每月应还 '+fmt(loanMonthly(l))+' · 已还 '+l.paidMonths+'/'+l.months+' 期 · 下期应还日：第 '+nextDueDay(l)+' 天' : '<br>到期一次还：'+fmt(l.principal+totalInt))
+   + (l.overdue? '<br><b style="color:#ff9a8a">已逾期！请尽快还款，逾期会扣信用分</b>':'')
+   + '</div><div class="btnrow">'
+   + (l.status==='进行中' && l.method==='分期还款' ? '<button class="btn gold" onclick="payInstallment('+l.id+')">还本期 '+fmt(loanMonthly(l)*(l.overdue?1.05:1))+'</button>' : '')
+   + (l.status==='进行中' && l.method==='一次还清' ? '<button class="btn gold" onclick="payLump('+l.id+')">一次还清 '+fmt(l.principal+totalInt)+'</button>' : '')
+   + '</div></div>';
+ });
+ p.innerHTML = h;
+}
+function previewLoan(){
+ const amt = Number(document.getElementById('loanAmt').value);
+ const months = Number(document.getElementById('loanMonths').value);
+ const method = document.getElementById('loanMethod').value;
+ const rate = rateFor(S.credit);
+ const totalInt = Math.round(amt * rate * months/12 /100)*100;
+ const monthly = Math.round(amt * (1 + rate*months/12) / months /100)*100;
+ document.getElementById('loanPreview').innerHTML = '借款 '+fmt(amt)+' · '+months+'个月 · '+method+'<br>年利率 <b>'+(rate*100).toFixed(2)+'%</b> · 总利息 <b>'+fmt(totalInt)+'</b><br>'+(method==='分期还款' ? '每月应还 <b>'+fmt(monthly)+'</b>' : '到期一次还 <b>'+fmt(amt+totalInt)+'</b>')+'<br>到期日：第 <b>'+(S.day+months*10)+'</b> 天（今天第 '+S.day+' 天）<br>可借额度 '+fmt(limitFor(S.credit))+'，信用分 '+S.credit;
+}
+function doBorrow(){
+ const amt = Number(document.getElementById('loanAmt').value);
+ const months = Number(document.getElementById('loanMonths').value);
+ const method = document.getElementById('loanMethod').value;
+ borrow(amt, months, method);
+}
+function renderGift(){
+ const p = document.getElementById('panel');
+ let h = '<h2>兑换 · 存档</h2><div class="hint">兑换码各只能用一次，用过再输会提示“已使用过”。兑换记录跟着存档一起保存，读档后仍不能重复领。</div>'
+ + '<div class="up"><b>兑换窗口</b><div class="meta">已用兑换码：'+(Object.keys(S.redeemed).length? Object.keys(S.redeemed).join('、') : '无')+'</div>'
+ + '<input type="text" id="redeemInput" placeholder="输入兑换码，如：代号1" style="width:100%;padding:10px;border-radius:8px;border:1px solid #8a6d2f;background:#0f0d08;color:#ffd76a;font-size:15px;margin:6px 0">'
+ + '<div class="btnrow"><button class="btn gold" onclick="redeem(document.getElementById(\'redeemInput\').value)">兑换</button></div>'
+ + '<div class="small">已知兑换码：代号1 = ¥10,000,000；55544 = ¥100,000,000（各一次）</div></div>'
+ + '<div class="up"><b>存档</b><div class="small">自动存档：每次操作后自动保存（浏览器 localStorage）。手动存档：3 个存档位。</div>';
+ [1,2,3].forEach(n=>{
+   let meta = '';
+   try{ const r = localStorage.getItem('xiaoyuan-dad-save-slot'+n); if(r){ const s = JSON.parse(r); meta = ' · 第 '+s.day+' 天 · '+fmt(s.money); } }catch(e){}
+   h += '<div class="slot"><b>存档位 '+n+'</b><span class="small">'+(meta||' · 空')+'</span><div class="btnrow"><button class="btn gold" onclick="saveSlot('+n+')">保存到此位</button><button class="btn dark" onclick="loadSlot('+n+')">读档</button></div></div>';
+ });
+ h += '</div><div class="up"><b>存档码（导出 / 导入）</b><div class="small">换设备 / 换浏览器时用：导出复制存档码，回来粘贴导入即可续玩。</div><textarea id="exportBox" placeholder="点导出生成存档码"></textarea><div class="btnrow"><button class="btn dark" onclick="exportCode()">导出存档码</button></div><textarea id="importBox" placeholder="粘贴存档码到这里"></textarea><div class="btnrow"><button class="btn gold" onclick="importCode()">导入存档码</button></div></div>';
+ p.innerHTML = h;
+}
+function renderShop(){
+ const p = document.getElementById('panel');
+ let h = '<h2>店铺升级</h2><div class="hint">用利润升级店铺，客流、成交率、鉴定能力都会提升。店铺等级随资金里程碑自动提升。</div>';
+ UPGRADES.forEach(u=>{
+   const lv = S.up[u.id]; const cost = Math.round(u.base * Math.pow(1.8, lv)/100)*100;
+   h += '<div class="up"><b>'+u.name+' · Lv.'+lv+'</b><div class="meta" style="margin:6px 0">'+u.desc+'</div><div class="btnrow"><button class="btn gold" onclick="buyUpgrade(\''+u.id+'\','+cost+')" '+(lv>=3?'disabled':'')+'>'+(lv>=3?'已满级':'升级 '+fmt(cost))+'</button></div></div>';
+ });
+ h += '<div class="meta">成交总数：<b>'+S.deals+'</b> · 总利润：<b>'+fmt(S.profit)+'</b><br>目标：资金达到 ¥200,000 升级店铺，¥1,000,000 成为二奢大亨！</div>';
+ if(S.money>=1000000) h += '<div class="clue">你已经是二奢大亨了！小圆爸爸专属，名副其实。</div>';
+ p.innerHTML = h;
+}
+function buyUpgrade(id, cost){
+ if(S.money<cost){ toast('资金不足'); return; }
+ if(S.up[id]>=3){ toast('已满级'); return; }
+ S.money -= cost; S.up[id]++; log('升级：'+UPGRADES.find(u=>u.id===id).name+' 到 Lv.'+S.up[id]); toast('升级成功！'); render();
+}
+function renderLog(){
+ const p = document.getElementById('panel');
+ p.innerHTML = '<h2>经营日志</h2><div class="log">'+(S.log.length? S.log.map(x=>'<div>'+x+'</div>').join('') : '<div>还没有记录，开始收第一件货吧。</div>')+'</div>';
+}
+function checkLoansOverdue(){
+ S.loans.forEach(l=>{
+   if(l.status!=='进行中' || l.overdue) return;
+   if(l.method==='分期还款' && S.day > nextDueDay(l)){ l.overdue = true; S.credit = Math.max(350, S.credit-8); log('⚠ 贷款 #'+l.id+' 逾期！本期未按时还，信用分 -8 → '+S.credit+'，下期需加 5% 罚息'); }
+   if(l.method==='一次还清' && S.day > l.dueDay){ l.overdue = true; S.credit = Math.max(350, S.credit-15); log('⚠ 贷款 #'+l.id+' 到期未还清，逾期！信用分 -15 → '+S.credit); }
+ });
+}
+function endDay(){
+ const rent = 500 * S.level;
+ S.money -= rent;
+ marketDrift();
+ S.day++;
+ checkLoansOverdue();
+ if(Math.random()<0.15){ const bonus = Math.round(rand(2000,8000)/100)*100; S.money += bonus; S.rep = Math.min(100,S.rep+3); log('大客户光顾，顺手买了点小东西，收入 '+fmt(bonus)+'，声望 +3'); toast('大客户来了！+'+fmt(bonus)); }
+ else if(Math.random()<0.12){ S.rep = Math.max(0,S.rep-3); log('市场传言：有人说你家有假货，声望 -3'); }
+ genCustomers();
+ log('第 '+S.day+' 天开始，付租金 '+fmt(rent)+'，来了 '+S.customers.length+' 位卖家');
+ if(S.money<0){ toast('资金为负！快卖货回血，或去银行借款'); }
+ render();
+}
+function resetGame(){
+ if(!confirm('确定重新开局吗？当前进度会清空。')) return;
+ try{ localStorage.removeItem('xiaoyuan-dad-save-v1'); }catch(e){}
+ S = defaultState(); marketInit(); genCustomers(); log('新开局：小圆爸爸专属二奢店开张，启动资金 ¥50,000'); render(); toast('新开局，祝大卖！');
+}
+function openModal(html){ document.getElementById('modalBox').innerHTML = html; document.getElementById('modal').classList.add('show'); }
+function closeModal(){ document.getElementById('modal').classList.remove('show'); }
+document.getElementById('modal').addEventListener('click', e=>{ if(e.target.id==='modal') closeModal(); });
+load();
+if(!S.market || !Object.keys(S.market).length) marketInit();
+if(!S.customers || !S.customers.length) genCustomers();
+if(!S.log.length) log('小圆爸爸专属二奢店开张，启动资金 ¥50,000');
+render();
+</script>
+</body>
+</html>
