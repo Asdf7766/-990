@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>仕途 · 晋升模拟</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root{
+    --theme:#1e4634; --theme2:#122b20; --cream:#f6f0e1; --cream2:#efe6d0;
+    --ink:#23261f; --red:#a3271e; --red2:#8c1f18; --gold:#b98a2f;
+    --line:rgba(246,240,225,.16);
+  }
+  html,body{ height:100%; }
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:linear-gradient(170deg,var(--theme) 0%,var(--theme2) 78%);
+    background-attachment:fixed; color:var(--cream);
+    max-width:520px; margin:0 auto; min-height:100%;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 96px);
+  }
+  .serif{ font-family:"Songti SC","STSong","SimSun",serif; }
+  h1.title{ font-family:"Songti SC","STSong",serif; font-size:44px; letter-spacing:.18em; font-weight:700; }
+  .sub{ opacity:.75; font-size:13px; letter-spacing:.28em; margin-top:6px; }
+  .card{ background:var(--cream); color:var(--ink); border-radius:14px; padding:16px; box-shadow:0 8px 24px rgba(0,0,0,.35); }
+  .card + .card{ margin-top:12px; }
+  .btn{ display:block; width:100%; border:none; border-radius:10px; padding:13px 16px; font-size:16px;
+    background:var(--red); color:#fff; font-weight:600; letter-spacing:.12em; cursor:pointer; }
+  .btn:active{ background:var(--red2); }
+  .btn.ghost{ background:transparent; color:var(--cream); border:1px solid var(--line); font-weight:400; }
+  .btn.gold{ background:var(--gold); }
+  .btn:disabled{ opacity:.45; }
+  .btn.small{ padding:9px 10px; font-size:14px; }
+  .row{ display:flex; gap:10px; } .row > *{ flex:1; }
+  .muted{ opacity:.65; font-size:12px; }
+  /* 开局 */
+  .linecard{ border:1px solid var(--line); border-radius:14px; padding:16px; margin-top:12px; background:rgba(0,0,0,.18); cursor:pointer; }
+  .linecard.sel{ outline:2px solid var(--gold); background:rgba(0,0,0,.3); }
+  .linecard h3{ font-family:"Songti SC",serif; font-size:22px; letter-spacing:.2em; }
+  .linecard p{ font-size:12.5px; opacity:.8; margin-top:6px; line-height:1.65; }
+  .dot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; vertical-align:1px; }
+  input.namein{ width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+    background:rgba(0,0,0,.25); color:var(--cream); font-size:16px; margin-top:14px; }
+  /* 档案卡 */
+  .rank{ font-family:"Songti SC",serif; font-size:40px; font-weight:700; line-height:1.1; }
+  .pgrid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .cell{ background:var(--cream2); border-radius:10px; padding:10px 12px; }
+  .cell .k{ font-size:11.5px; color:#6f6a58; letter-spacing:.15em; }
+  .cell .v{ font-size:19px; font-weight:700; margin-top:2px; font-family:"Songti SC",serif; }
+  .cell .v small{ font-size:12px; font-weight:400; color:#6f6a58; }
+  .bar{ height:7px; border-radius:4px; background:rgba(0,0,0,.14); overflow:hidden; margin-top:6px; }
+  .bar > i{ display:block; height:100%; background:var(--red); border-radius:4px; }
+  .bar.risk > i{ background:#c0392b; }
+  .bar.favor > i{ background:var(--gold); }
+  /* 标签页 */
+  .tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:30;
+    background:rgba(10,14,11,.92); backdrop-filter:blur(8px);
+    padding:8px 8px calc(env(safe-area-inset-bottom) + 8px);
+    display:flex; max-width:520px; margin:0 auto; border-top:1px solid var(--line); }
+  .tabbar button{ flex:1; background:none; border:none; color:var(--cream); opacity:.55;
+    font-size:13px; padding:9px 0 5px; letter-spacing:.2em; cursor:pointer; }
+  .tabbar button.on{ opacity:1; color:#fff; border-top:2px solid var(--gold); margin-top:-9px; padding-top:11px; }
+  .advancebar{ position:fixed; left:0; right:0; bottom:calc(env(safe-area-inset-bottom) + 57px); z-index:29;
+    max-width:520px; margin:0 auto; padding:0 16px; display:flex; gap:10px; }
+  .advancebar .btn{ box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  .shop-item,.giftrow{ display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:1px dashed rgba(0,0,0,.14); }
+  .shop-item:last-child,.giftrow:last-child{ border-bottom:none; }
+  .price{ color:var(--red); font-weight:700; }
+  .tag{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:rgba(0,0,0,.1); margin-left:6px; color:#55503e; }
+  .log{ font-size:12.5px; line-height:1.9; color:#4c4736; max-height:220px; overflow:auto; }
+  .log div{ border-bottom:1px dashed rgba(0,0,0,.08); padding:2px 0; }
+  /* 弹层 */
+  .mask{ position:fixed; inset:0; background:rgba(5,8,6,.66); z-index:50; display:none; align-items:flex-end; justify-content:center; }
+  .mask.show{ display:flex; }
+  .sheet{ background:var(--cream); color:var(--ink); width:100%; max-width:520px; border-radius:18px 18px 0 0;
+    padding:22px 20px calc(env(safe-area-inset-bottom) + 20px); max-height:86vh; overflow:auto; animation:up .22s ease; }
+  @keyframes up{ from{ transform:translateY(30px); opacity:.4;} to{ transform:none; opacity:1;} }
+  .sheet h3{ font-family:"Songti SC",serif; font-size:23px; letter-spacing:.08em; margin-bottom:8px; }
+  .sheet .desc{ font-size:14px; line-height:1.75; color:#45412f; }
+  .choice{ display:block; width:100%; text-align:left; margin-top:10px; padding:13px 14px; border-radius:10px;
+    border:1px solid #d8cdb2; background:#fbf7ec; font-size:15px; color:var(--ink); cursor:pointer; }
+  .choice:active{ background:#f1e8d2; }
+  .choice.sel{ outline:2px solid var(--red); background:#f7ecd4; }
+  .choice small{ display:block; margin-top:3px; color:#7a745c; font-size:12px; }
+  .toast{ position:fixed; left:50%; top:calc(env(safe-area-inset-top) + 18px); transform:translateX(-50%);
+    background:rgba(12,16,13,.92); color:var(--cream); padding:10px 18px; border-radius:24px; font-size:13.5px;
+    z-index:99; opacity:0; pointer-events:none; transition:opacity .25s; max-width:88%; text-align:center; }
+  .toast.show{ opacity:1; }
+  .big-ending{ text-align:center; padding-top:8vh; }
+  .big-ending .seal{ font-family:"Songti SC",serif; font-size:56px; letter-spacing:.2em; }
+  .kv{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px dashed rgba(0,0,0,.12); font-size:14px; }
+  .kv b{ font-family:"Songti SC",serif; }
+  .danger{ color:#b03a2e; font-weight:700; }
+  .ok{ color:#2e7d46; font-weight:700; }
+  .secttl{ font-family:"Songti SC",serif; font-size:19px; letter-spacing:.14em; margin-bottom:6px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- ============ 开局页 ============ -->
+<div id="startScreen">
+  <div style="text-align:center; margin-top:5vh;">
+    <h1 class="title">仕 途</h1>
+    <div class="sub">晋 升 模 拟 · 一 生 为 官</div>
+  </div>
+  <div id="continueBox" class="hidden" style="margin-top:26px;">
+    <button class="btn gold" id="btnContinue">继 续 游 戏</button>
+    <div class="muted" id="continueInfo" style="text-align:center; margin-top:8px;"></div>
+  </div>
+  <input class="namein" id="nameInput" placeholder="输入姓名（留空随机）" maxlength="6">
+  <div id="linePick"></div>
+  <button class="btn" id="btnStart" style="margin-top:18px;">开 始 这 一 生</button>
+  <p class="muted" style="margin-top:14px; line-height:1.8; text-align:center;">
+    三条仕途，三种人生。清廉一生光荣退休，或是铤而走险——<br>收下的每一分钱，都在暗处标好了代价。
+  </p>
+</div>
+
+<!-- ============ 主界面 ============ -->
+<div id="mainScreen" class="hidden">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div class="muted" style="letter-spacing:.25em;" id="pfTag">人 事 档 案</div>
+        <div style="font-size:21px; font-weight:700; margin-top:4px;" class="serif" id="pfName">—</div>
+        <div style="font-size:13px; color:#5c5744; margin-top:2px;" id="pfJob">—</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="rank" id="pfRank">—</div>
+        <div style="font-size:12px; color:#5c5744;" id="pfAge">—</div>
+      </div>
+    </div>
+    <div class="pgrid">
+      <div class="cell"><div class="k">本级任职</div><div class="v" id="pfTenure">—</div></div>
+      <div class="cell"><div class="k">月 薪</div><div class="v" id="pfSalary">—</div></div>
+      <div class="cell"><div class="k">存 款</div><div class="v" id="pfMoney">—</div></div>
+      <div class="cell"><div class="k">工 龄</div><div class="v" id="pfService">—</div></div>
+    </div>
+    <div style="margin-top:12px;">
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:#5c5744;">
+        <span>政绩 <b id="pfMerit" style="color:var(--ink);">0</b></span>
+        <span>声望 <b id="pfFame" style="color:var(--ink);">0</b></span>
+        <span>领导好感 <b id="pfFavor" style="color:var(--ink);">0</b></span>
+        <span>风险 <b id="pfRisk" style="color:var(--ink);">0</b></span>
+      </div>
+      <div class="bar risk"><i id="pfRiskBar" style="width:0%"></i></div>
+    </div>
+  </div>
+
+  <div id="tab-archive" class="tabpage"></div>
+  <div id="tab-work" class="tabpage hidden"></div>
+  <div id="tab-gift" class="tabpage hidden"></div>
+  <div id="tab-clean" class="tabpage hidden"></div>
+  <div id="tab-promote" class="tabpage hidden"></div>
+
+  <div class="advancebar">
+    <button class="btn" id="btnMonth">推 进 一 个 月</button>
+    <button class="btn gold" id="btnYear" style="flex:.62;">推进一年</button>
+  </div>
+  <div class="tabbar">
+    <button data-tab="archive" class="on">档 案</button>
+    <button data-tab="work">工 作</button>
+    <button data-tab="gift">送 礼</button>
+    <button data-tab="clean">廉 政</button>
+    <button data-tab="promote">晋 升</button>
+  </div>
+</div>
+
+<!-- ============ 通用弹层 ============ -->
+<div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+"use strict";
+
+// ==== CORE START ====
+// 《仕途》核心状态机：纯数据 + 纯函数（无 DOM），可被 Node 抽取自测。
+const LINES = {
+  army: {
+    id:"army", name:"军队", startAge:18, theme:"#1e4634", theme2:"#122b20",
+    tag:"军 人 档 案", enterWord:"入伍", svcWord:"服役",
+    desc:"18 岁入伍，从列兵干起，军衔十五级，顶点：中央军委副主席。",
+    salaryLabels:["军衔工资","军龄工资","地区岗位津贴"],
+    levels:[
+      {rank:"列兵", job:"战士", years:1, merit:8,  sal:[1800,600,400],   posts:[]},
+      {rank:"上等兵", job:"副班长", years:2, merit:12, sal:[2100,700,500],  posts:["一班副班长","机枪手班副班长","侦察班副班长","通信班副班长","炮兵班副班长"]},
+      {rank:"下士", job:"班长", years:2, merit:16, sal:[3600,1200,1000], posts:["步兵班长","炮兵班长","装甲车车长","工兵班长","侦察班长"]},
+      {rank:"中士", job:"班长", years:3, merit:20, sal:[4100,1400,1100], posts:["特种班班长","教导队班长","后勤班班长","通信站站长","修理班班长"]},
+      {rank:"上士", job:"代理排长", years:3, merit:25, sal:[4700,1600,1300], posts:["连队代理排长","营部参谋士官","装备助理员","军需助理员","文书班班长"]},
+      {rank:"少尉", job:"排长", years:2, merit:30, sal:[5200,1500,1500], posts:["步兵排长","炮兵排长","装甲排排长","通信排排长","工兵排排长"]},
+      {rank:"中尉", job:"副连长", years:2, merit:36, sal:[5800,1700,1700], posts:["步兵连副连长","炮兵连副连长","连队副指导员","营部参谋","坦克连副连长"]},
+      {rank:"上尉", job:"连长", years:3, merit:42, sal:[6600,1900,2000], posts:["步兵连连长","炮兵连连长","连指导员","营参谋长助理","装甲连连长"]},
+      {rank:"少校", job:"营长", years:3, merit:48, sal:[7700,2200,2300], posts:["步兵营营长","合成营副营长","营教导员","旅部参谋","炮兵营营长"]},
+      {rank:"中校", job:"副团长", years:3, merit:55, sal:[8900,2500,2600], posts:["副团长","团参谋长","团副政委","旅部科长","训练基地副主任"]},
+      {rank:"上校", job:"团长", years:3, merit:62, sal:[10300,2900,3000], posts:["步兵团团长","合成团团长","团政委","旅副参谋长","训练基地主任"]},
+      {rank:"大校", job:"师长", years:4, merit:70, sal:[12000,3400,3400], posts:["师长","合成旅旅长","师政委","战区机关部长","省军区副司令"]},
+      {rank:"少将", job:"集团军军长", years:4, merit:78, sal:[15200,4300,4000], posts:["集团军军长","集团军政委","省军区司令","院校校长","战区副参谋长"]},
+      {rank:"中将", job:"战区副司令", years:4, merit:88, sal:[18600,5200,4700], posts:["战区副司令","战区副政委","军种副司令","国防大学副校长","联勤保障部队副司令"]},
+      {rank:"上将", job:"中央军委副主席", years:0, merit:0, sal:[23800,6500,5700], posts:["中央军委副主席（分管作战）","中央军委副主席（分管训练）","中央军委副主席（分管装备）","中央军委副主席（分管政治工作）"]}
+    ]
+  },
+  police: {
+    id:"police", name:"公安", startAge:22, theme:"#1b3050", theme2:"#0e1c30",
+    tag:"警 察 档 案", enterWord:"入警", svcWord:"从警",
+    desc:"22 岁入警，从基层民警干起，警衔十二级，顶点：公安部部长。",
+    salaryLabels:["职务工资","警衔津贴","执勤岗位津贴"],
+    levels:[
+      {rank:"警员", job:"民警", years:2, merit:10, sal:[3400,900,1300],  posts:[]},
+      {rank:"三级警司", job:"派出所副所长", years:2, merit:14, sal:[3800,1000,1400], posts:["城关派出所副所长","刑侦大队副大队长","交警中队副中队长","治安大队副大队长","新区派出所副所长"]},
+      {rank:"二级警司", job:"派出所所长", years:2, merit:18, sal:[4200,1100,1600], posts:["城关派出所所长","新区派出所所长","刑侦大队大队长","交警大队副大队长","经侦大队大队长"]},
+      {rank:"一级警司", job:"县公安局副局长", years:3, merit:24, sal:[4700,1200,1800], posts:["县公安局副局长","市局治安支队副支队长","县局政委","经侦支队副支队长","交警支队副支队长"]},
+      {rank:"三级警督", job:"县公安局局长", years:3, merit:30, sal:[5300,1400,1900], posts:["县公安局局长","市局刑侦支队支队长","市局治安支队支队长","特警支队支队长","县局局长兼政委"]},
+      {rank:"二级警督", job:"市公安局副局长", years:3, merit:36, sal:[5900,1500,2100], posts:["市公安局副局长","省厅治安总队副总队长","市局副政委","网安总队副总队长","禁毒支队支队长"]},
+      {rank:"一级警督", job:"市公安局局长", years:3, merit:44, sal:[6600,1700,2500], posts:["市公安局局长","市局局长兼督察长","省厅刑侦总队总队长","省厅交警总队总队长","省厅禁毒总队总队长"]},
+      {rank:"三级警监", job:"省公安厅副厅长", years:3, merit:52, sal:[7700,2000,2800], posts:["省公安厅副厅长","公安部治安管理局副局长","警察学院副院长","公安部刑侦局副局长","省厅副厅长兼市局局长"]},
+      {rank:"二级警监", job:"省公安厅厅长", years:4, merit:60, sal:[8900,2400,3200], posts:["省公安厅厅长","公安部刑侦局局长","公安部治安管理局局长","省厅厅长兼督察长","公安部交管局局长"]},
+      {rank:"一级警监", job:"公安部部长助理", years:4, merit:70, sal:[10400,2900,3700], posts:["公安部部长助理","公安部办公厅主任","国家移民管理局副局长","公安部政治部副主任","公安部督察专员"]},
+      {rank:"副总警监", job:"公安部副部长", years:4, merit:80, sal:[14200,3900,4900], posts:["公安部副部长","公安部副部长兼移民局局长","公安部政治部主任","公安部副部长兼网安局局长","公安部副部长兼反恐专员"]},
+      {rank:"总警监", job:"公安部部长", years:0, merit:0, sal:[21500,4800,5700], posts:["公安部部长","公安部部长兼中央政法委副书记","公安部部长兼国家反恐办主任"]}
+    ]
+  },
+  gov: {
+    id:"gov", name:"政法", startAge:22, theme:"#52271e", theme2:"#33150f",
+    tag:"干 部 档 案", enterWord:"考公入职", svcWord:"任职",
+    desc:"22 岁考公入职，从科员干起，沿政法系统拾级而上，顶点：中央政法委书记（中央政治局委员）。",
+    salaryLabels:["职务工资","级别工资","绩效奖金"],
+    levels:[
+      {rank:"科员", job:"科员", years:2, merit:10, sal:[3300,800,1300],  posts:[]},
+      {rank:"副科级", job:"副科长", years:3, merit:15, sal:[3700,900,1500],  posts:["乡镇副镇长","县局副局长","科室副科长","街道办副主任","县委办副科长"]},
+      {rank:"正科级", job:"科长", years:3, merit:20, sal:[4200,1100,1700], posts:["县委办科长","乡镇镇长","县局局长","街道办主任","县政府办科长"]},
+      {rank:"副处级", job:"副县长", years:3, merit:26, sal:[4900,1300,2000], posts:["副县长","县委常委、副县长","市局副局长","开发区管委会副主任","县政协副主席"]},
+      {rank:"正处级", job:"县长", years:3, merit:32, sal:[5700,1500,2400], posts:["县长","县委书记","市局局长","市委副秘书长","市政府副秘书长"]},
+      {rank:"副厅级", job:"副市长", years:4, merit:40, sal:[6800,1800,2900], posts:["副市长","市委常委、副市长","省厅副厅长","省委政法委副书记（副厅）","市政协副主席"]},
+      {rank:"正厅级", job:"市委政法委书记", years:4, merit:48, sal:[8100,2200,3500], posts:["市委政法委书记","市长","省委政法委副书记（正厅）","省法院副院长","省检察院副检察长"]},
+      {rank:"副省部级", job:"省委政法委书记", years:4, merit:58, sal:[10300,2900,4300], posts:["省委政法委书记","省委常委、政法委书记","省高级法院院长","省检察院检察长","省政协副主席"]},
+      {rank:"正省部级", job:"中央政法委副书记", years:4, merit:68, sal:[14200,3900,5900], posts:["中央政法委副书记","中央政法委副书记兼秘书长","最高人民法院副院长","最高人民检察院副检察长","司法部副部长"]},
+      {rank:"副国级", job:"中央政法委书记", years:0, merit:0, sal:[23800,5200,5000], posts:["中央政法委书记","中央政法委书记兼中央综治委主任","中央政法委书记兼中央政法工作领导小组组长"]}
+    ]
+  }
+};
+
+const GIFTS = [
+  {name:"家乡土特产", price:500,    favor:3,  desc:"心意到了，领导随手收下"},
+  {name:"名烟名酒",   price:3000,   favor:8,  desc:"逢年过节的常规礼数"},
+  {name:"购物卡",     price:10000,  favor:14, desc:"不显山不露水，领导满意"},
+  {name:"进口名表",   price:30000,  favor:22, desc:"领导多看了你两眼"},
+  {name:"黄金摆件",   price:60000,  favor:30, desc:"分量十足，领导记住了你"},
+  {name:"金条",       price:100000, favor:40, desc:"下了血本，领导把你当自己人"}
+];
+
+const SURNAMES = ["王","李","张","刘","陈","杨","黄","周","吴","徐","孙","胡","朱","高","林","何","郭","马","罗","梁"];
+const GIVEN = ["建国","志强","文斌","立军","海峰","明轩","正清","国强","永胜","振华","卫东","家辉","天成","守信","望舒"];
+const NAMEPOOL = ["陈国栋","林建军","苏文博","赵子昂","周慕云","沈亦舟","顾长风","陆天明"];
+
+const EVENTS = [
+  {title:"上级专项督查", desc:"上级督查组临时到访，检查台账与作风建设，点名要你汇报。",
+   choices:[
+     {text:"连夜完善材料，如实汇报", fx:{merit:8,fame:2}, result:"汇报条理清楚，督查组当场表扬。政绩 +8，声望 +2。"},
+     {text:"把功劳都揽到自己身上", fx:{merit:3,favor:-4}, result:"同事心里有数，领导也微微皱眉。政绩 +3，好感 −4。"},
+     {text:"推说工作是下属负责的", fx:{merit:-4,fame:-2}, result:"督查组印象不佳。政绩 −4，声望 −2。"}]},
+  {title:"群众上门求助", desc:"一位老人拄着拐杖来到单位，反映的问题拖了很久没解决。",
+   choices:[
+     {text:"亲自接待，跟办到底", fx:{merit:6,fame:5}, result:"事情办妥，老人拉着你的手连声道谢。政绩 +6，声望 +5。"},
+     {text:"按流程转办，登记了事", fx:{merit:1}, result:"程序上挑不出毛病。政绩 +1。"},
+     {text:"让老人下次再来", fx:{fame:-5,merit:-2}, result:"老人失望离开，窗口同事都看在眼里。声望 −5，政绩 −2。"}]},
+  {title:"突发专项任务", desc:"辖区突发情况，上级要求立即抽调骨干组建专班，连夜处置。",
+   choices:[
+     {text:"主动请缨，带队处置", fx:{merit:9,favor:3}, result:"处置得当，专班受到通报表扬。政绩 +9，好感 +3。"},
+     {text:"服从安排，做好分内事", fx:{merit:4}, result:"稳扎稳打完成任务。政绩 +4。"},
+     {text:"称病请假，躲开专班", fx:{merit:-5,favor:-5}, result:"名单上唯独缺你，领导记下了。政绩 −5，好感 −5。"}]},
+  {title:"业务培训学习", desc:"单位组织为期一周的业务培训，结业成绩记入档案。",
+   choices:[
+     {text:"认真听课，争取优秀学员", fx:{merit:6,fame:2}, result:"结业考核名列前茅。政绩 +6，声望 +2。"},
+     {text:"正常参加，混个结业", fx:{merit:2}, result:"顺利结业。政绩 +2。"},
+     {text:"签到后就溜号", fx:{merit:-3}, result:"被巡查点名通报。政绩 −3。"}]},
+  {title:"老熟人请托", desc:"一位老熟人找你，想为亲戚的孩子安排个照顾，话里话外暗示「不会让你白忙」。",
+   choices:[
+     {text:"讲清政策，婉言拒绝", fx:{fame:5,merit:2}, result:"对方虽有些失落，还是表示理解。声望 +5，政绩 +2。"},
+     {text:"在政策范围内帮着问问", fx:{merit:1,risk:3}, result:"没越红线，但心里多少落了个人情。风险 +3。"},
+     {text:"拍胸脯包在我身上", fx:{risk:9,favor:-2}, result:"话说得太满，往后怕是难以收场。风险 +9。"}]},
+  {title:"媒体采访邀约", desc:"本地媒体想采访你所在单位的亮点工作，领导让你出面。",
+   choices:[
+     {text:"精心准备，对答如流", fx:{fame:7,merit:3}, result:"报道播出后反响很好。声望 +7，政绩 +3。"},
+     {text:"照稿念完，中规中矩", fx:{fame:2}, result:"报道顺利播出。声望 +2。"},
+     {text:"推给同事出面", fx:{fame:-2}, result:"机会让给了别人。声望 −2。"}]},
+  {title:"慰问困难群众", desc:"节前慰问，单位组织去结对帮扶的困难家庭送温暖。",
+   choices:[
+     {text:"自掏腰包多买些米面油", fx:{fame:6,money:-500}, result:"花了 500 元，一家人感动得直抹泪。声望 +6。"},
+     {text:"按标准完成慰问", fx:{fame:2,merit:2}, result:"慰问圆满完成。声望 +2，政绩 +2。"},
+     {text:"拍照留痕后匆匆离开", fx:{fame:-3}, result:"群众小声嘀咕：像是来作秀的。声望 −3。"}]},
+  {title:"同事突发疾病", desc:"搭班的同事突然病倒，他手头的工作一时没人接。",
+   choices:[
+     {text:"主动顶上，双份工作一起扛", fx:{merit:6,favor:4}, result:"领导看在眼里：这人靠得住。政绩 +6，好感 +4。"},
+     {text:"帮着分担一部分", fx:{merit:3}, result:"解了燃眉之急。政绩 +3。"},
+     {text:"各人自扫门前雪", fx:{favor:-3,fame:-2}, result:"同事们私下议论你冷淡。好感 −3，声望 −2。"}]},
+  {title:"廉政警示教育", desc:"单位组织观看警示教育片，片中人声泪俱下忏悔。",
+   choices:[
+     {text:"认真观看，对照自省", fx:{risk:-6,fame:2}, result:"心里那根弦又紧了紧。风险 −6，声望 +2。"},
+     {text:"当作例行公事听听", fx:{risk:-2}, result:"多少听进去一点。风险 −2。"},
+     {text:"低头玩手机", fx:{risk:2}, result:"散会后被纪检干部多看了一眼。风险 +2。"}]},
+  {title:"年底考核测评", desc:"年度考核民主测评开始了，同事们的票很关键。",
+   choices:[
+     {text:"平时人缘好，心里有底", fx:{merit:5,fame:3}, result:"测评优秀票过半。政绩 +5，声望 +3。"},
+     {text:"临时跟同事们联络感情", fx:{merit:2,favor:-1}, result:"效果一般。政绩 +2。"},
+     {text:"无所谓，爱咋咋地", fx:{merit:-2}, result:"测评排名靠后。政绩 −2。"}]}
+];
+
+const EXAMS = [
+  {q:"群众情绪激动地来反映问题，越说越激动，你首先应该？", options:["先安抚情绪，倒杯水请他坐下慢慢说","让他先回去写书面材料","叫保安请他出去"], answer:0, why:"群众工作先稳情绪，再谈问题。"},
+  {q:"上级交办一项急难任务，人手明显不足，最稳妥的做法是？", options:["硬着头皮自己熬夜硬扛","主动汇报困难，统筹协调各方力量","先拖着，等领导再催"], answer:1, why:"汇报＋协调，比硬扛和拖延都靠谱。"},
+  {q:"你发现下属的工作失误已经造成影响，正确处理是？", options:["赶紧隐瞒下来再说","把责任全推给下属","及时纠正补救并按程序报告"], answer:2, why:"纠正＋报告，才是担当。"},
+  {q:"请托人想走关系办事，还暗示有「好处」，你应该？", options:["按规矩办理，明确拒绝好处","先收下，事成再说","含糊答应，拖着看"], answer:0, why:"规矩面前没有人情价。"},
+  {q:"单位经费紧张，但有件实事必须办，你的做法是？", options:["干脆不办，省得出错","精打细算，优先保重点环节","先花了再说，缺口以后再想"], answer:1, why:"过紧日子，也要把实事办好。"},
+  {q:"两位骨干同事闹矛盾影响协作，你作为负责人应该？", options:["各打五十大板，不再过问","分别谈话，主动调解","拉一派打一派"], answer:1, why:"队伍团结靠主动调解。"},
+  {q:"辖区突发险情，你正在休假，第一反应是？", options:["等休假结束再说","关机，谁也别找我","立即结束休假赶赴现场"], answer:2, why:"关键时刻必须顶得上。"},
+  {q:"老领导打招呼，要你办一件明显不合规的事，你应该？", options:["讲明政策，婉言谢绝","老领导的面子必须给，照办","嘴上答应，实际拖着不办"], answer:0, why:"原则问题，谁的面子都不行。"},
+  {q:"年终评优名额有限，几位同志表现都不错，你推荐谁？", options:["推荐跟自己关系近的","推荐自己","按实绩和群众口碑推荐"], answer:2, why:"评优凭实绩，公道自在人心。"},
+  {q:"你负责的采购项目里，有供应商暗示给回扣，你应该？", options:["依规核查，必要时上报","睁一只眼闭一只眼","笑纳回扣，替他中标"], answer:0, why:"采购回扣是高压线，碰不得。"},
+  {q:"培训考核时发现题目超出所学范围，正确态度是？", options:["凭经验认真作答，考后补学","交白卷抗议","想办法看旁边人的"], answer:0, why:"认真作答＋考后补学，态度先过关。"},
+  {q:"群众送来锦旗致谢，还塞了个红包，你应该？", options:["锦旗收下，红包坚决退回","都收下，这是群众心意","都不要，冷脸请他离开"], answer:0, why:"锦旗是荣誉，红包是红线。"}
+];
+
+const POST_BONUS = [
+  {tag:"历练岗", fx:{merit:4},          note:"政绩 +4"},
+  {tag:"实权岗", fx:{favor:6},          note:"领导好感 +6"},
+  {tag:"平稳岗", fx:{fame:4},           note:"声望 +4"},
+  {tag:"一线岗", fx:{merit:2,fame:2},   note:"政绩 +2 · 声望 +2"},
+  {tag:"核心岗", fx:{merit:3,favor:3},  note:"政绩 +3 · 好感 +3"}
+];
+
+const BRIBE_FROM = ["本地开发商王某","辖区企业老板李某","工程承包商张某","老下属赵某","商会会长刘某","矿业公司陈某","房地产老板周某"];
+const BRIBE_WHAT = ["想承揽单位的工程项目","想为子女安排工作","想在检查中「被照顾」","想拿下辖区的一块地","想让你在评审中打个招呼","想摆平一起纠纷"];
+
+function fmt(n){ return "¥" + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function pick(arr, rng){ return arr[Math.floor(rng() * arr.length) % arr.length]; }
+
+function genLeader(state, rng){
+  const line = LINES[state.lineId];
+  const next = line.levels[Math.min(state.level + 1, line.levels.length - 1)];
+  return { name: pick(SURNAMES, rng) + pick(GIVEN, rng), title: next.job };
+}
+
+function createGame(lineId, name, rng){
+  rng = rng || Math.random;
+  const line = LINES[lineId];
+  const st = {
+    lineId: lineId, name: name || pick(NAMEPOOL, rng),
+    level: 0, job: line.levels[0].job,
+    tenureMonths: 0, totalMonths: 0,
+    money: 2000, merit: 0, favor: 40, fame: 10, risk: 0,
+    totalBribe: 0, totalSalary: 0, totalGiftSpent: 0,
+    workUses: 0, cleanStreak: 0, surrenders: 0,
+    gifts: {}, leader: null, pending: null, over: null, sentence: 0,
+    log: []
+  };
+  st.leader = genLeader(st, rng);
+  st.log.push(line.enterWord + "报到：" + line.levels[0].job + "（" + line.levels[0].rank + "），仕途开始。");
+  return st;
+}
+
+function ageOf(state){
+  const line = LINES[state.lineId];
+  const m = line.startAge * 12 + state.totalMonths;
+  return { years: Math.floor(m / 12), months: m % 12 };
+}
+function salaryOf(state){
+  const line = LINES[state.lineId];
+  const lv = line.levels[state.level];
+  const parts = lv.sal.map(function(v, i){ return { label: line.salaryLabels[i], amt: v }; });
+  const total = lv.sal.reduce(function(a, b){ return a + b; }, 0);
+  return { parts: parts, total: total };
+}
+function isTop(state){ return state.level >= LINES[state.lineId].levels.length - 1; }
+function promotionReq(state){
+  if (isTop(state)) return null;
+  const lv = LINES[state.lineId].levels[state.level];
+  return { years: lv.years, merit: lv.merit };
+}
+function canPromote(state){
+  const req = promotionReq(state);
+  if (!req || state.over) return false;
+  return state.tenureMonths >= req.years * 12 && state.merit >= req.merit;
+}
+
+// 推进一个月（仅时间/发薪/衰减，事件由 rollEvents 另行决定）。返回 {paid, retired}
+function applyMonth(state){
+  if (state.over) return { paid: 0, retired: state.over === "retired" };
+  const sal = salaryOf(state);
+  state.money += sal.total;
+  state.totalSalary += sal.total;
+  state.tenureMonths += 1;
+  state.totalMonths += 1;
+  state.workUses = 0;
+  const a = ageOf(state);
+  if (a.years >= 65){
+    state.over = "retired";
+    state.log.push("年满 65 岁，光荣退休。");
+    return { paid: sal.total, retired: true };
+  }
+  return { paid: sal.total, retired: false };
+}
+function decayRisk(state, tookBribeThisMonth){
+  if (!tookBribeThisMonth && state.risk > 0){
+    state.risk = Math.max(0, state.risk - 1);
+    state.cleanStreak += 1;
+  }
+}
+
+function doWork(state){
+  if (state.over || state.workUses >= 3) return false;
+  state.workUses += 1;
+  state.merit += 3;
+  return true;
+}
+
+function applyFx(state, fx){
+  if (!fx) return;
+  if (fx.merit)  state.merit  = Math.max(0, state.merit + fx.merit);
+  if (fx.fame)   state.fame   = Math.max(0, state.fame + fx.fame);
+  if (fx.favor)  state.favor  = clamp(state.favor + fx.favor, 0, 100);
+  if (fx.risk)   state.risk   = clamp(state.risk + fx.risk, 0, 100);
+  if (fx.money)  state.money  = Math.max(0, state.money + fx.money);
+}
+
+function bribeRange(state){
+  const lvl = state.level;
+  let min = Math.round(2500 * Math.pow(2.05, lvl) / 100) * 100;
+  min = Math.min(min, 2000000);
+  let max = Math.round(min * 3.2 / 100) * 100;
+  max = Math.min(max, 6000000);
+  return [min, max];
+}
+function bribeChance(state){ return 0.10 + state.level * 0.012; }
+function inspectionChance(state){ return state.risk >= 15 ? state.risk * 0.0016 : 0; }
+function caughtChance(state){
+  return clamp(0.18 + Math.min(0.55, state.totalBribe / 3000000 * 0.55) + state.risk * 0.002, 0, 0.93);
+}
+function sentenceFor(totalBribe){
+  if (totalBribe < 100000) return 3;
+  if (totalBribe < 1000000) return 7;
+  if (totalBribe < 5000000) return 12;
+  return -1; // 无期徒刑
+}
+
+// 每月事件判定：优先审查，其次请托送钱，再次普通事件。返回事件对象或 null。
+function rollEvents(state, rng){
+  if (state.over) return null;
+  if (rng() < inspectionChance(state)){
+    return { type:"inspection", title:"纪委巡视 · 风声紧了",
+      desc:"巡视组进驻单位，群众举报箱也摆了出来。同事们大气不敢出——你的事，到底兜不兜得住？" };
+  }
+  if (rng() < bribeChance(state)){
+    const r = bribeRange(state);
+    const amount = Math.round((r[0] + rng() * (r[1] - r[0])) / 100) * 100;
+    const from = pick(BRIBE_FROM, rng), what = pick(BRIBE_WHAT, rng);
+    return { type:"bribe", title:"有人请托", amount: amount, from: from,
+      desc: from + " 托人约你吃了顿饭，临走塞给你一个沉甸甸的信封/手提袋，"
+         + "只求你「" + what + "」。你估摸着，里面是 " + fmt(amount) + "。" };
+  }
+  if (rng() < 0.5){
+    const ev = pick(EVENTS, rng);
+    return { type:"event", title: ev.title, desc: ev.desc, choices: ev.choices };
+  }
+  return null;
+}
+
+function takeBribe(state, amount){
+  state.money += amount;
+  state.totalBribe += amount;
+  state.risk = clamp(state.risk + Math.min(40, Math.round(4 + amount / 12000)), 0, 100);
+  state.cleanStreak = 0;
+  state.log.push("收下 " + fmt(amount) + "（累计收受 " + fmt(state.totalBribe) + "），风险上升。");
+}
+function refuseBribe(state){
+  state.fame += 3;
+  state.merit += 2;
+  state.risk = Math.max(0, state.risk - 3);
+  state.log.push("拒收一笔请托钱财，声望 +3。");
+}
+
+function resolveInspection(state, rng){
+  if (rng() < caughtChance(state)){
+    state.over = "caught";
+    state.sentence = sentenceFor(state.totalBribe);
+    state.log.push("审查中被查实，累计收受 " + fmt(state.totalBribe) + "，被留置。");
+    return { caught: true, sentence: state.sentence };
+  }
+  state.risk = Math.max(0, state.risk - 10);
+  state.fame += 2;
+  state.log.push("巡视过关，虚惊一场。风险下降，声望 +2。");
+  return { caught: false };
+}
+
+function examSet(state, rng){
+  const pool = EXAMS.slice();
+  const out = [];
+  for (let i = 0; i < 3 && pool.length; i++){
+    out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
+  return out;
+}
+function gradeExam(state, correct, rng){
+  if (correct >= 2) return { pass: true, via: "答对 " + correct + " 题，考核通过" };
+  const p = Math.min(0.95, 0.8 + state.favor * 0.001);
+  if (rng() < p) return { pass: true, via: "答对 " + correct + " 题，但综合评议过关（领导替你说了话）" };
+  return { pass: false, via: "答对 " + correct + " 题，考核未通过，等下个周期再考" };
+}
+
+function postsOffered(state){
+  const line = LINES[state.lineId];
+  const next = line.levels[state.level + 1];
+  if (!next) return [];
+  let n = 3 + (state.favor >= 50 ? 1 : 0) + (state.favor >= 80 ? 1 : 0);
+  n = Math.min(n, next.posts.length);
+  return next.posts.slice(0, n).map(function(name, i){
+    const b = POST_BONUS[i % POST_BONUS.length];
+    return { name: name, tag: b.tag, note: b.note, fx: b.fx };
+  });
+}
+function applyPost(state, post, rng){
+  const line = LINES[state.lineId];
+  state.level += 1;
+  state.job = post.name;
+  state.tenureMonths = 0;
+  state.merit = 0;
+  applyFx(state, post.fx);
+  state.leader = genLeader(state, rng);
+  state.log.push("晋升：" + line.levels[state.level].rank + " · " + post.name + "。");
+}
+
+function buyGift(state, idx){
+  const g = GIFTS[idx];
+  if (state.money < g.price) return false;
+  state.money -= g.price;
+  state.totalGiftSpent += g.price;
+  state.gifts[idx] = (state.gifts[idx] || 0) + 1;
+  return true;
+}
+function giveGift(state, idx){
+  if (isTop(state)) return false;
+  if (!state.gifts[idx]) return false;
+  state.gifts[idx] -= 1;
+  state.favor = clamp(state.favor + GIFTS[idx].favor, 0, 100);
+  return true;
+}
+
+function surrender(state){
+  if (state.over) return null;
+  const refund = Math.min(state.money, state.totalBribe);
+  state.money -= refund;
+  const dropped = Math.min(2, state.level);
+  state.level -= dropped;
+  state.job = LINES[state.lineId].levels[state.level].job;
+  state.tenureMonths = 0;
+  state.totalBribe = 0;
+  state.risk = 0;
+  state.fame += 5;
+  state.surrenders += 1;
+  state.leader = genLeader(state, Math.random);
+  state.log.push("主动自首退赃 " + fmt(refund) + "，降职 " + dropped + " 级，重新做人。");
+  return { refund: refund, dropped: dropped };
+}
+
+function retireTitle(state){
+  const line = LINES[state.lineId];
+  const lv = state.level, top = line.levels.length - 1;
+  if (lv >= top) return "位居巅峰，功成身退";
+  if (lv >= top - 2) return "身居高位，善始善终";
+  if (lv >= Math.floor(top / 2)) return "中流砥柱，平穩落地";
+  return "默默耕耘，平安退休";
+}
+function summary(state){
+  const line = LINES[state.lineId];
+  const lv = line.levels[state.level];
+  return {
+    years: Math.floor(state.totalMonths / 12),
+    rank: lv.rank, job: state.job,
+    totalSalary: state.totalSalary, totalGiftSpent: state.totalGiftSpent,
+    totalBribe: state.totalBribe, clean: state.totalBribe === 0,
+    top: isTop(state), title: retireTitle(state)
+  };
+}
+// ==== CORE END ====
+
+// ================= UI 层 =================
+const SAVE_KEY = "shitu-save-v1";
+let S = null; // 当前状态
+let curTab = "archive";
+let examState = null; // {qs, picks}
+let pendingPosts = null;
+
+const $ = function(id){ return document.getElementById(id);};
+function toast(msg){
+const t = $("toast"); t.textContent = msg; t.classList.add("show");
+clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove("show");}, 2400);
+}
+function save(){ try{ if (S) localStorage.setItem(SAVE_KEY, JSON.stringify(S));}catch(e){}}
+function loadSave(){
+try{ const raw = localStorage.getItem(SAVE_KEY); return raw? JSON.parse(raw): null;}catch(e){ return null;}
+}
+function setTheme(line){
+document.documentElement.style.setProperty("--theme", line.theme);
+document.documentElement.style.setProperty("--theme2", line.theme2);
+}
+
+// ---------- 开局 ----------
+let pickedLine = "army";
+function renderLinePick(){
+$("linePick").innerHTML = Object.keys(LINES).map(function(k){
+const L = LINES[k];
+return '<div class="linecard' + (pickedLine === k? " sel": "") + '" data-line="' + k + '">'
++ '<h3><span class="dot" style="background:' + L.theme + '; outline:1px solid rgba(255,255,255,.5);"></span>' + L.name + '</h3>'
++ '<p>' + L.desc + '<br>起薪 ' + fmt(L.levels[0].sal.reduce(function(a,b){return a+b;},0)) + ' / 月 · ' + L.startAge + ' 岁' + L.enterWord + ' · 65 岁退休</p></div>';
+}).join("");
+Array.prototype.forEach.call(document.querySelectorAll(".linecard"), function(el){
+el.onclick = function(){ pickedLine = el.getAttribute("data-line"); setTheme(LINES[pickedLine]); renderLinePick();};
+});
+}
+function refreshContinue(){
+const sv = loadSave();
+if (sv &&!sv.over){
+$("continueBox").classList.remove("hidden");
+const L = LINES[sv.lineId];
+$("continueInfo").textContent = sv.name + " · " + L.name + " · " + L.levels[sv.level].rank + " " + sv.job;
+} else if (sv && sv.over){
+localStorage.removeItem(SAVE_KEY);
+}
+}
+$("btnContinue").onclick = function(){
+S = loadSave(); if (!S) return;
+setTheme(LINES[S.lineId]); enterMain();
+};
+$("btnStart").onclick = function(){
+const nm = $("nameInput").value.trim();
+S = createGame(pickedLine, nm || null, Math.random);
+setTheme(LINES[pickedLine]);
+save(); enterMain();
+toast(LINES[pickedLine].enterWord + "报到，新的一生开始了");
+};
+
+function enterMain(){
+$("startScreen").classList.add("hidden");
+$("mainScreen").classList.remove("hidden");
+if (S.over){ showEnding(); return;}
+if (S.pending){ renderAll(); showPending(); return;}
+renderAll();
+}
+
+// ---------- 主渲染 ----------
+function renderAll(){
+if (!S) return;
+const L = LINES[S.lineId], lv = L.levels[S.level], sal = salaryOf(S), a = ageOf(S);
+$("pfTag").textContent = L.tag;
+$("pfName").textContent = S.name;
+$("pfJob").textContent = L.name + " · " + S.job;
+$("pfRank").textContent = lv.rank;
+$("pfAge").textContent = a.years + " 岁" + (a.months? " " + a.months + " 个月": "");
+$("pfTenure").innerHTML = Math.floor(S.tenureMonths / 12) + " 年 " + (S.tenureMonths % 12) + " 月";
+$("pfSalary").innerHTML = fmt(sal.total) + " <small>/ 月</small>";
+$("pfMoney").textContent = fmt(S.money);
+$("pfService").innerHTML = Math.floor(S.totalMonths / 12) + " 年 <small>" + L.svcWord + "</small>";
+$("pfMerit").textContent = S.merit;
+$("pfFame").textContent = S.fame;
+$("pfFavor").textContent = S.favor;
+$("pfRisk").textContent = S.risk;
+$("pfRiskBar").style.width = S.risk + "%";
+document.querySelectorAll(".tabbar button").forEach(function(b){
+b.classList.toggle("on", b.getAttribute("data-tab") === curTab);
+});
+document.querySelectorAll(".tabpage").forEach(function(p){ p.classList.add("hidden");});
+$("tab-" + curTab).classList.remove("hidden");
+renderTab();
+save();
+}
+document.querySelectorAll(".tabbar button").forEach(function(b){
+b.onclick = function(){ curTab = b.getAttribute("data-tab"); renderAll();};
+});
+
+function renderTab(){
+if (curTab === "archive") return renderArchive();
+if (curTab === "work") return renderWork();
+if (curTab === "gift") return renderGift();
+if (curTab === "clean") return renderClean();
+if (curTab === "promote") return renderPromote();
+}
+
+function renderArchive(){
+const L = LINES[S.lineId], sal = salaryOf(S);
+const rows = sal.parts.map(function(p){
+return '<div class="kv"><span>' + p.label + '</span><b>' + fmt(p.amt) + '</b></div>';
+}).join("");
+$("tab-archive").innerHTML =
+'<div class="card"><div class="secttl">工 资 明 细</div>' + rows
++ '<div class="kv"><span>月薪合计</span><b class="price">' + fmt(sal.total) + '</b></div>'
++ '<div class="kv"><span>累计合法收入</span><b>' + fmt(S.totalSalary) + '</b></div>'
++ '<div class="kv"><span>送礼总支出</span><b>' + fmt(S.totalGiftSpent) + '</b></div></div>'
++ '<div class="card"><div class="secttl">人 生 轨 迹</div><div class="log">'
++ S.log.slice(-30).reverse().map(function(x){ return "<div>" + x + "</div>";}).join("")
++ '</div></div>'
++ '<button class="btn ghost" id="btnRestart" style="margin-top:12px;">重 开 新 档</button>';
+$("btnRestart").onclick = function(){
+if (confirm("确定要放弃这一生，重新开始吗？")){
+localStorage.removeItem(SAVE_KEY); location.reload();
+}
+};
+}
+
+function renderWork(){
+const left = 3 - S.workUses;
+$("tab-work").innerHTML =
+'<div class="card"><div class="secttl">日 常 工 作</div>'
++ '<p style="font-size:13.5px; line-height:1.8; color:#45412f;">处理公务、走访基层、参加会议——把分内事做到极致，政绩自然来。</p>'
++ '<button class="btn" id="btnWork" style="margin-top:12px;" ' + (left <= 0? "disabled": "") + '>'
++ (left > 0? "认 真 工 作（本月剩余 " + left + " 次）": "本月已尽力，下月再战") + '</button>'
++ '<p class="muted" style="margin-top:10px; color:#6f6a58;">每次 +3 政绩。推进月份时会随机遇到事件、请托与巡视，福祸自担。</p></div>'
++ '<div class="card"><div class="secttl">领 导</div>'
++ '<div class="kv"><span>直属领导</span><b>' + (isTop(S)? "——（已到顶点）": S.leader.name + " · " + S.leader.title) + '</b></div>'
++ '<div class="kv"><span>领导好感</span><b>' + S.favor + ' / 100</b></div>'
++ '<div class="bar favor"><i style="width:' + S.favor + '%"></i></div>'
++ '<p class="muted" style="margin-top:8px; color:#6f6a58;">好感高，考核有人替你说话，选岗时好位置也多。</p></div>';
+const bw = $("btnWork");
+if (bw) bw.onclick = function(){
+if (doWork(S)){ toast("认真工作，政绩 +3"); renderAll();}
+};
+}
+
+function renderGift(){
+const top = isTop(S);
+let inv = "";
+GIFTS.forEach(function(g, i){
+const c = S.gifts[i] || 0;
+inv += '<div class="giftrow"><div><b>' + g.name + '</b> <span class="price">' + fmt(g.price) + '</span>'
++ '<div class="muted" style="color:#6f6a58;">' + g.desc + ' · 好感 +' + g.favor + ' · 库存 ' + c + '</div></div>'
++ '<div style="display:flex; gap:6px; flex:none;">'
++ '<button class="btn small" data-buy="' + i + '" style="width:auto;">买</button>'
++ '<button class="btn small gold" data-give="' + i + '" style="width:auto;" ' + (c <= 0 || top? "disabled": "") + '>送</button>'
++ '</div></div>';
+});
+$("tab-gift").innerHTML =
+'<div class="card"><div class="secttl">送 礼</div>'
++ (top
+? '<p style="font-size:15px; line-height:1.9;">你已经到顶了，没有领导了。<br><span class="muted" style="color:#6f6a58;">这一路送出去的礼，都成了往事。</span></p>'
+: '<p style="font-size:13.5px; line-height:1.8; color:#45412f;">直属领导：<b>' + S.leader.name + " · " + S.leader.title + '</b>（好感 ' + S.favor + '）<br>逢年过节走动走动，晋升时自然有人替你说话。</p>')
++ inv + '</div>';
+document.querySelectorAll("[data-buy]").forEach(function(b){
+b.onclick = function(){
+const i = +b.getAttribute("data-buy");
+if (buyGift(S, i)){ toast("已购入：" + GIFTS[i].name); renderAll();}
+else toast("存款不够");
+};
+});
+document.querySelectorAll("[data-give]").forEach(function(b){
+b.onclick = function(){
+const i = +b.getAttribute("data-give");
+if (giveGift(S, i)){ toast("送出" + GIFTS[i].name + "，领导好感 +" + GIFTS[i].favor); renderAll();}
+};
+});
+}
+
+function renderClean(){
+const riskTxt = S.risk >= 60? '<span class="danger">高危：风声很紧</span>'
+: S.risk >= 30? '<span style="color:#c77b1e; font-weight:700;">偏高：有人开始议论</span>'
+: S.risk >= 15? '<span style="color:#8a7a1e; font-weight:700;">略有耳闻</span>'
+: '<span class="ok">清廉如水</span>';
+$("tab-clean").innerHTML =
+'<div class="card"><div class="secttl">廉 政 档 案</div>'
++ '<div class="kv"><span>贪腐风险值</span><b>' + S.risk + ' / 100</b></div>'
++ '<div class="bar risk"><i style="width:' + S.risk + '%"></i></div>'
++ '<div class="kv"><span>风险评估</span><b>' + riskTxt + '</b></div>'
++ '<div class="kv"><span>累计收受</span><b class="' + (S.totalBribe > 0? "danger": "") + '">' + fmt(S.totalBribe) + '</b></div>'
++ '<div class="kv"><span>连续清廉</span><b>' + S.cleanStreak + ' 个月</b></div>'
++ '<p class="muted" style="margin-top:10px; color:#6f6a58; line-height:1.8;">风险越高，每月被巡视、举报的概率越大；被查时收得越多越难脱身。清廉月份会让风险每月 −1。真被查住，按累计收受量刑：10 万以下 3 年，100 万以下 7 年，500 万以下 12 年，再多就是无期。</p></div>'
++ '<div class="card"><div class="secttl">回 头 是 岸</div>'
++ '<p style="font-size:13.5px; line-height:1.8; color:#45412f;">主动向组织自首：退清全部赃款，风险与累计收受清零，但要降两级、重新做人。</p>'
++ '<button class="btn" id="btnSurrender" style="margin-top:12px;" ' + (S.totalBribe <= 0 && S.risk <= 0? "disabled": "") + '>主 动 自 首 · 退 赃</button></div>';
+const bs = $("btnSurrender");
+if (bs) bs.onclick = function(){
+if (!confirm("确定自首？将退赃并降两级。")) return;
+const r = surrender(S);
+toast("已自首：退赃 " + fmt(r.refund) + "，降 " + r.dropped + " 级");
+renderAll();
+};
+}
+
+function renderPromote(){
+const L = LINES[S.lineId];
+if (isTop(S)){
+$("tab-promote").innerHTML = '<div class="card"><div class="secttl">已 达 顶 点</div>'
++ '<p style="font-size:15px; line-height:1.9;">' + S.job + ' —— ' + L.name + '这条路，你已经走到了最高处。接下来守住晚节，65 岁光荣退休。</p></div>';
+return;
+}
+const req = promotionReq(S), next = L.levels[S.level + 1];
+const yOk = S.tenureMonths >= req.years * 12, mOk = S.merit >= req.merit;
+$("tab-promote").innerHTML =
+'<div class="card"><div class="secttl">晋 升 之 路</div>'
++ '<div class="kv"><span>当前</span><b>' + L.levels[S.level].rank + " · " + S.job + '</b></div>'
++ '<div class="kv"><span>目标</span><b class="price">' + next.rank + '</b></div>'
++ '<div style="margin-top:10px; font-size:13px; color:#5c5744;">任职年限：' + Math.floor(S.tenureMonths/12) + ' 年 ' + (S.tenureMonths%12) + ' 月 / 满 ' + req.years + ' 年 ' + (yOk? '<span class="ok">✔</span>': '') + '</div>'
++ '<div class="bar"><i style="width:' + Math.min(100, S.tenureMonths / (req.years * 12) * 100) + '%"></i></div>'
++ '<div style="margin-top:10px; font-size:13px; color:#5c5744;">政绩：' + S.merit + ' / ' + req.merit + ' ' + (mOk? '<span class="ok">✔</span>': '') + '</div>'
++ '<div class="bar"><i style="width:' + Math.min(100, S.merit / req.merit * 100) + '%"></i></div>'
++ '<button class="btn" id="btnExam" style="margin-top:16px;" ' + (canPromote(S)? "": "disabled") + '>'
++ (canPromote(S)? "开 始 晋 升 考 核": "条 件 未 满 足") + '</button>'
++ '<p class="muted" style="margin-top:10px; color:#6f6a58;">考核 3 道情境题，答对 2 题即过；就算答错，综合评议也有 80% 保底——领导好感越高越稳。过后任命选岗。</p></div>';
+const be = $("btnExam");
+if (be) be.onclick = startExam;
+}
+
+// ---------- 推进 ----------
+function advanceOne(){
+if (!S || S.over || S.pending) return false;
+const before = S.risk;
+const r = applyMonth(S);
+if (!r.retired) decayRisk(S, false);
+if (r.paid) S.log.push("发薪 " + fmt(r.paid) + "（" + LINES[S.lineId].levels[S.level].rank + "）。");
+if (S.over){ save(); showEnding(); return false;}
+const ev = rollEvents(S, Math.random);
+if (ev){ S.pending = ev; save(); showPending(); return false;}
+if (before!== S.risk) {}
+return true;
+}
+$("btnMonth").onclick = function(){ advanceOne(); renderAll();};
+$("btnYear").onclick = function(){
+for (let i = 0; i < 12; i++){ if (!advanceOne()) break;}
+renderAll();
+};
+
+// ---------- 弹层 ----------
+function openSheet(html){ $("sheet").innerHTML = html; $("mask").classList.add("show");}
+function closeSheet(){ $("mask").classList.remove("show");}
+
+function showPending(){
+const ev = S.pending; if (!ev) return;
+if (ev.type === "event"){
+openSheet('<h3>' + ev.title + '</h3><p class="desc">' + ev.desc + '</p>'
++ ev.choices.map(function(c, i){
+return '<button class="choice" data-ch="' + i + '">' + c.text + '</button>';
+}).join(""));
+document.querySelectorAll("[data-ch]").forEach(function(b){
+b.onclick = function(){
+const c = ev.choices[+b.getAttribute("data-ch")];
+applyFx(S, c.fx);
+S.log.push("" + c.result);
+S.pending = null; closeSheet(); toast(c.result); renderAll();
+};
+});
+} else if (ev.type === "bribe"){
+openSheet('<h3>' + ev.title + '</h3><p class="desc">' + ev.desc + '</p>'
++ '<button class="choice" id="btnTake">收下<small>存款 +' + fmt(ev.amount) + '，但风险大幅上升，收得越多越危险</small></button>'
++ '<button class="choice" id="btnRefuse">婉拒<small>声望 +3 · 政绩 +2 · 风险 −3</small></button>');
+$("btnTake").onclick = function(){
+takeBribe(S, ev.amount); S.pending = null; closeSheet();
+toast("收下 " + fmt(ev.amount) + "。钱进口袋了，账也记上了。"); renderAll();
+};
+$("btnRefuse").onclick = function(){
+refuseBribe(S); S.pending = null; closeSheet();
+toast("婉拒了。两袖清风，睡得踏实。"); renderAll();
+};
+} else if (ev.type === "inspection"){
+openSheet('<h3>' + ev.title + '</h3><p class="desc">' + ev.desc + '</p>'
++ '<button class="btn" id="btnInsp" style="margin-top:14px;">接 受 审 查</button>');
+$("btnInsp").onclick = function(){
+const r = resolveInspection(S, Math.random);
+S.pending = null;
+if (r.caught){ save(); closeSheet(); showEnding();}
+else { closeSheet(); toast("巡视过关，有惊无险。"); renderAll();}
+};
+}
+}
+
+// ---------- 考核与选岗 ----------
+function startExam(){
+if (!canPromote(S)) return;
+examState = { qs: examSet(S, Math.random), picks: {}};
+const L = LINES[S.lineId];
+openSheet('<h3>晋升考核 · ' + L.levels[S.level + 1].rank + '</h3>'
++ '<p class="desc">三道情境题，凭本事答。答对 2 题即过。</p>'
++ examState.qs.map(function(q, qi){
+return '<div style="margin-top:14px;"><b style="font-size:14.5px;">' + (qi + 1) + ". " + q.q + '</b>'
++ q.options.map(function(o, oi){
+return '<button class="choice" data-q="' + qi + '" data-o="' + oi + '">' + o + '</button>';
+}).join("") + '</div>';
+}).join("")
++ '<button class="btn" id="btnSubmitExam" style="margin-top:18px;">交 卷</button>');
+document.querySelectorAll("[data-q]").forEach(function(b){
+b.onclick = function(){
+const q = b.getAttribute("data-q");
+examState.picks[q] = +b.getAttribute("data-o");
+document.querySelectorAll('[data-q="' + q + '"]').forEach(function(x){ x.classList.remove("sel");});
+b.classList.add("sel");
+};
+});
+$("btnSubmitExam").onclick = function(){
+let correct = 0;
+examState.qs.forEach(function(q, qi){ if (examState.picks[qi] === q.answer) correct++;});
+const g = gradeExam(S, correct, Math.random);
+if (!g.pass){
+closeSheet(); toast(g.via + "——再攒攒资历"); renderAll(); return;
+}
+pendingPosts = postsOffered(S);
+const next = LINES[S.lineId].levels[S.level + 1];
+openSheet('<h3>任命岗位</h3><p class="desc">' + g.via + '！晋升 <b>' + next.rank + '</b>，选择新任岗位：</p>'
++ pendingPosts.map(function(p, i){
+return '<button class="choice" data-post="' + i + '">' + p.name
++ '<span class="tag">' + p.tag + '</span><small>' + p.note + '</small></button>';
+}).join(""));
+document.querySelectorAll("[data-post]").forEach(function(b){
+b.onclick = function(){
+const p = pendingPosts[+b.getAttribute("data-post")];
+applyPost(S, p, Math.random);
+pendingPosts = null; closeSheet();
+toast("任命：" + p.name + "。新岗位，新气象！");
+curTab = "promote"; renderAll();
+};
+});
+};
+}
+
+// ---------- 结局 ----------
+function showEnding(){
+const sm = summary(S);
+const L = LINES[S.lineId];
+let head, body;
+if (S.over === "caught"){
+head = '<div class="seal" style="color:#b03a2e;">落 马</div>';
+body = '<p style="line-height:2; font-size:15px;">巡视组带走你的那天，单位门口围满了人。<br>'
++ '经查，你累计收受他人钱财 <b class="danger">' + fmt(S.totalBribe) + '</b>。<br>'
++ (S.sentence > 0? '数罪并罚，判处有期徒刑 <b>' + S.sentence + ' 年</b>。': '数额特别巨大，判处<b>无期徒刑</b>。')
++ '<br>这一生的仕途，到此为止。</p>';
+} else {
+head = '<div class="seal" style="color:var(--gold);">退 休</div>';
+body = '<p style="line-height:2; font-size:15px;">' + sm.title + '。<br>'
++ (sm.top? '你站到了' + L.name + '的最高处——' + sm.job + '，这一生，值了。': '你在 ' + sm.rank + ' · ' + sm.job + ' 的岗位上光荣退休。')
++ '<br>' + (sm.clean? '一辈子两袖清风，腰杆挺得笔直。': '虽然收过一些钱、走过一段弯路，好在最后全身而退。')
++ '</p>';
+}
+openSheet('<div class="big-ending">' + head
++ '<div style="margin:16px 0;">' + body + '</div>'
++ '<div style="text-align:left;">'
++ '<div class="kv"><span>姓名 / 系统</span><b>' + S.name + ' · ' + L.name + '</b></div>'
++ '<div class="kv"><span>最高职务</span><b>' + sm.job + '（' + sm.rank + '）</b></div>'
++ '<div class="kv"><span>' + L.svcWord + '年数</span><b>' + sm.years + ' 年</b></div>'
++ '<div class="kv"><span>一生合法收入</span><b>' + fmt(sm.totalSalary) + '</b></div>'
++ '<div class="kv"><span>送礼总支出</span><b>' + fmt(sm.totalGiftSpent) + '</b></div>'
++ '<div class="kv"><span>是否清廉</span><b>' + (sm.clean? '<span class="ok">清廉一生</span>': '<span class="danger">收受 ' + fmt(sm.totalBribe) + '</span>') + '</b></div>'
++ (S.surrenders? '<div class="kv"><span>主动自首</span><b>' + S.surrenders + ' 次（已退赃）</b></div>': '')
++ '</div>'
++ '<button class="btn" id="btnAgain" style="margin-top:20px;">再 来 一 生</button></div>');
+$("mask").classList.add("show");
+$("btnAgain").onclick = function(){
+localStorage.removeItem(SAVE_KEY); location.reload();
+};
+}
+
+// ---------- 启动 ----------
+setTheme(LINES.army);
+renderLinePick();
+refreshContinue();
+</script>
+</body>
+</html>
