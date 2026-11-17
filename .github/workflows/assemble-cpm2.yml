@@ -12,14 +12,14 @@ jobs:
           curl -L -o part-01 "https://drive.usercontent.google.com/download?id=1NkzyN4kLaOVm95cqh67THmiHH4y1iMsY&export=download&confirm=t"
           curl -L -o part-02 "https://drive.usercontent.google.com/download?id=1lot0N8CdcMC1Ee1x2IwkmuUH9P6wCmcT&export=download&confirm=t"
           curl -L -o part-03 "https://drive.usercontent.google.com/download?id=13oMXg8jjWj955jQ8E8UbOK2X1Dkt4DXm&export=download&confirm=t"
-          curl -L -o part-04 "https://drive.usercontent.google.com/download?id=1BvSeP34Y9LfW1CyZLTnDdYumTR_bJOKz&export=download&confirm=t"
+          curl -L -o part-04 "https://drive.usercontent.google.com/download?id=1qdEubJsmyhsPWTJ8AoRwDmnkH4mHpgMG&export=download&confirm=t"
           ls -la part-*
       - name: Assemble and verify
         run: |
           set -e
           cat part-00 part-01 part-02 part-03 part-04 > CPM2-money-99990000-clean.ipa
           ls -la CPM2-money-99990000-clean.ipa
-          echo "8b032529b710eeb397ab2fe80934ab99  CPM2-money-99990000-clean.ipa" | md5sum -c -
+          echo "d51c72dff2143a36c64cd33432ce7665  CPM2-money-99990000-clean.ipa" | md5sum -c -
       - name: Upload assembled file to gofile
         run: |
           SERVER=$(curl -s https://api.gofile.io/servers | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['servers'][0]['name'])")
