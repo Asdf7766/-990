@@ -5,14 +5,14 @@ jobs:
   assemble:
     runs-on: ubuntu-latest
     steps:
-      - name: Download parts
+      - name: Download chunks from Drive
         run: |
           set -e
-          curl -L -o part-00 "https://itsfileditchfiles.st/echo14/0bd97a1ad540f98e6310/f3ffd448cc433ad6"
-          curl -L -o part-01 "https://itsfileditchfiles.st/echo14/1af123b2bff0a5b18e93/f5b4751dfeaa5305"
-          curl -L -o part-02 "https://itsfileditchfiles.st/echo14/bf28965dde91ceadd42e/5cf7e359893e8a4e"
-          curl -L -o part-03 "https://itsfileditchfiles.st/echo14/12a1f89f9851dbd6daf5/2527df211d050a92"
-          curl -L -o part-04 "https://itsfileditchfiles.st/echo14/d784946e01cb8341e026/3673d0e0a498a9c8"
+          curl -L -o part-00 "https://drive.usercontent.google.com/download?id=1mXhJLEUDUIyAPsEU9_tV1nFmNVkq6FT0&export=download&confirm=t"
+          curl -L -o part-01 "https://drive.usercontent.google.com/download?id=1NkzyN4kLaOVm95cqh67THmiHH4y1iMsY&export=download&confirm=t"
+          curl -L -o part-02 "https://drive.usercontent.google.com/download?id=1lot0N8CdcMC1Ee1x2IwkmuUH9P6wCmcT&export=download&confirm=t"
+          curl -L -o part-03 "https://drive.usercontent.google.com/download?id=13oMXg8jjWj955jQ8E8UbOK2X1Dkt4DXm&export=download&confirm=t"
+          curl -L -o part-04 "https://drive.usercontent.google.com/download?id=1BvSeP34Y9LfW1CyZLTnDdYumTR_bJOKz&export=download&confirm=t"
           ls -la part-*
       - name: Assemble and verify
         run: |
@@ -20,10 +20,9 @@ jobs:
           cat part-00 part-01 part-02 part-03 part-04 > CPM2-money-99990000-clean.ipa
           ls -la CPM2-money-99990000-clean.ipa
           echo "8b032529b710eeb397ab2fe80934ab99  CPM2-money-99990000-clean.ipa" | md5sum -c -
-      - name: Upload assembled file
+      - name: Upload assembled file to gofile
         run: |
-          set -e
-          RESP=$(curl -s -T CPM2-money-99990000-clean.ipa https://new.fileditch.com/upload.php)
-          echo "$RESP"
-          echo "## CPM2 assembled download" >> $GITHUB_STEP_SUMMARY
-          echo "$RESP" >> $GITHUB_STEP_SUMMARY
+          SERVER=$(curl -s https://api.gofile.io/servers | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['servers'][0]['name'])")
+          echo "server=$SERVER"
+          curl -F "file=@CPM2-money-99990000-clean.ipa" "https://$SERVER.gofile.io/contents/uploadfile" | tee gofile-response.json
+          cat gofile-response.json >> $GITHUB_STEP_SUMMARY
