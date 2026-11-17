@@ -17,12 +17,12 @@ jobs:
       - name: Assemble and verify
         run: |
           set -e
-          cat part-00 part-01 part-02 part-03 part-04 > CPM2-money-99990000-clean.ipa
-          ls -la CPM2-money-99990000-clean.ipa
-          echo "d51c72dff2143a36c64cd33432ce7665  CPM2-money-99990000-clean.ipa" | md5sum -c -
+          cat part-00 part-01 part-02 part-03 part-04 > CPM2-money-99990000-V2.ipa
+          ls -la CPM2-money-99990000-V2.ipa
+          echo "d51c72dff2143a36c64cd33432ce7665  CPM2-money-99990000-V2.ipa" | md5sum -c -
       - name: Upload assembled file to gofile
         run: |
           SERVER=$(curl -s https://api.gofile.io/servers | python3 -c "import sys,json;print(json.load(sys.stdin)['data']['servers'][0]['name'])")
           echo "server=$SERVER"
-          curl -F "file=@CPM2-money-99990000-clean.ipa" "https://$SERVER.gofile.io/contents/uploadfile" | tee gofile-response.json
+          curl -F "file=@CPM2-money-99990000-V2.ipa" "https://$SERVER.gofile.io/contents/uploadfile" | tee gofile-response.json
           cat gofile-response.json >> $GITHUB_STEP_SUMMARY
